@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>빈곤론 퀴즈 [8강 - 중급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); opacity: 0.6; }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; color: #856404; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제8강: 빈곤정책1 - 공공부조정책(중급)</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>정답 및 해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <p id="result-msg"></p>
+        <button class="option-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="option-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    /* [노트북LM 데이터]
+       형식: {"level": "중", "q": "질문", "o": ["보기1","보기2","보기3","보기4"], "a": 정답번호, "h": "힌트", "e": "해설"}
+    */
+    const quizData = [
+        {"level": "중", "q": "다음 중 공공부조의 정의와 특징으로 옳지 않은 것은? (워크북 연습문제 응용) [워크북 8장]",
+    "o": ["조세를 통해 재원을 마련하며, 사회보험과 달리 무기여 소득 보장 제도이다.", "수급자의 생활 유지 능력을 입증하도록 요구하며, 보충적 성격을 가진다.", "수급자의 자립과 독립심과는 관계없이 빈곤이 증명되면 무조건적으로 현금 급여만을 평생 지급한다.", "인간다운 최저생활을 유지하도록 보호하는 권리적 성격을 가진다."],
+    "a": 2,
+    "h": "워크북 연습문제 해설: 공공부조는 수급자의 자립을 지원하며 단순 무조건 지급이 아닙니다.",
+    "e": "공공부조는 수급자의 자립과 자활(독립심 고취)을 핵심 목표로 삼으며, 단순한 퍼주기가 아니라 근로 능력이 있을 경우 자활 사업 참여를 조건으로 하는 등 자립 지원을 병행합니다."
+  },
+  {
+    "level": "중",
+    "q": "공공부조 수급 과정에서 오명(Stigma)이 수반되는 주요 원인으로 가장 적절한 것은? (워크북 연습문제 응용) [워크북 8장]",
+    "o": ["자산조사를 통해 본인이 가난하다는 사실을 증명해야 하기 때문", "수급 대상자에게 요구 없이 무조건 소득을 지급하기 때문", "공공부조 제도가 모든 국민에게 보편적으로 평등하게 제공되기 때문", "수급자에게 근로 능력 검증이나 부양의무자 확인을 전혀 요구하지 않기 때문"],
+    "a": 0,
+    "h": "워크북 연습문제 해설: 자산조사와 소득·생활 상황 증명이 낙인을 유발합니다.",
+    "e": "자산조사는 국가가 공식적으로 그 사람을 빈곤층으로 규정하고, 수급자가 스스로 무능함과 가난을 증명하도록 강제하므로 이 과정에서 수치심과 오명이 발생하게 됩니다."
+  },
+  {
+    "level": "중",
+    "q": "잔여주의적 관점에서 공공부조를 운영할 때 나타나는 특징으로 옳은 것은? (워크북 연습문제 응용) [워크북 8장]",
+    "o": ["신청 절차를 간단히 하여 복지 사각지대를 완전히 없앤다.", "급여를 제한적이고 불쾌한 방식으로 제공하여 수급자가 공공부조에 의존하지 않도록 유도한다.", "수급자의 자산이나 근로 능력 조사 없이 보편적으로 지급한다.", "급여 수준을 중산층 소득 수준으로 맞추어 지급한다."],
+    "a": 1,
+    "h": "워크북 연습문제 해설: 벤담의 공리주의적 관점과 연결되어 의존을 억제하려는 목적입니다.",
+    "e": "잔여주의 관점은 공공부조 신청과 수급 과정을 까다롭고 수치스럽게 만들어, 사람들이 스스로 일을 통해 소득을 얻으려 노력하게끔 유도하는 통제적 성격을 띱니다."
+  },
+  {
+    "level": "중",
+    "q": "영국의 제3의 길 및 '근로 연계 복지(Workfare)'와 관련된 설명으로 옳은 것은? (워크북 연습문제 응용) [워크북 8장]",
+    "o": ["모든 실직자에게 조건 없이 평생 실업수당을 지급한다.", "교육·훈련 수료와 적극적 구직 활동 수행을 필수 조건으로 하여 수당을 지급한다.", "복지 혜택을 노동과 완전히 분리하여 완전한 탈상품화를 이룬다.", "노동 능력이 있는 자에게는 급여 신청 자격 자체를 원천 박탈한다."],
+    "a": 1,
+    "h": "워크북 연습문제 해설: 영국은 근로 연계 복지를 통해 노동시장 참여를 유도합니다.",
+    "e": "토니 블레어의 '제3의 길' 정책은 단순히 돈을 주는 복지에서 벗어나, 직업 훈련과 구직 활동을 성실히 수행해야만 급여를 주는 생산적 복지(근로 연계 복지)로의 전환을 의미합니다."
+  },
+  {
+    "level": "중",
+    "q": "공공부조에서 빈곤선 설정과 관련된 주요 쟁점으로 옳은 것은? (워크북 연습문제 응용) [워크북 8장]",
+    "o": ["절대적 기준을 사용하면 사회의 소득 불평등 격차를 완벽히 해결할 수 있다.", "절대적 빈곤선의 전물량이나 반물량 방식 모두 어떤 품목을 필수품으로 선정할지 사회적 합의를 도출하는 것이 핵심 쟁점이다.", "상대적 빈곤선은 무조건 평균소득만을 기준으로 사용해야 한다.", "엥겔계수는 소득이 높을수록 떨어지므로 현대 사회 빈곤 측정에 일체의 논란 없이 완벽하다."],
+    "a": 1,
+    "h": "워크북 연습문제 해설: 어떤 품목을 장바구니에 넣고 어느 수준을 품위 있는 생활로 볼 것인가가 논란입니다.",
+    "e": "절대적 빈곤선 산정 방식(마켓 바스켓 등)은 과연 무엇을 필수품으로 볼 것인지, 그 기준을 전문가가 정할지 국민적 합의를 거칠지 등 객관성 확보가 매우 어려운 쟁점을 안고 있습니다."
+  },
+  {
+    "level": "중",
+    "q": "작가 조기현의 르포 『아빠의 아빠가 됐다』에서 청년 간병인인 작가가 공공부조를 신청하는 과정에서 경험한 제도적 문제점(오명)의 핵심은 무엇인가? [워크북 8장/강의 녹음]",
+    "o": ["의료급여 수급자가 되기 위해 이혼한 어머니의 높은 소득 내역까지 조회당하며 스스로의 무능함을 치욕적으로 증명해야 했던 가족 부양 의무제의 장벽", "공공부조 신청서가 오직 영어로만 작성되어 있어 이해할 수 없었던 점", "수급자가 되자마자 국가 강제 노역장에 끌려가야 했던 점", "국가가 수급자 지정 대가로 집의 소유권을 강제로 빼앗은 점"],
+    "a": 0,
+    "h": "워크북 요약: 이혼한 어머니의 소득이 높다는 이유로 수급 탈락과 치욕을 경험했습니다.",
+    "e": "이 책은 한국의 가족 부양 의무제가 실제 돌봄과 무관한 가족의 소득까지 연좌제처럼 묶어, 절박한 빈곤 가구가 국가 지원을 받기 위해 얼마나 치욕적인 수치심과 행정적 거절을 겪어야 하는지(오명)를 생생히 고발합니다."
+  },
+  {
+    "level": "중",
+    "q": "공공부조법의 원리 중 '보충성의 원리'가 의미하는 바는 무엇인가? [워크북 8장]",
+    "o": ["수급자에게 필요한 모든 현물을 집으로 매일 배송해 준다.", "근로 능력이 있는 사람을 우선적으로 선발하여 보충한다.", "국가가 최저생활 기준선을 정한 후, 수급자의 소득인정액을 뺀 나머지 '부족한 차액'만큼만 보충하여 지급한다.", "공공부조 예산이 부족하면 민간 기업의 자금으로 강제 보충한다."],
+    "a": 2,
+    "h": "잠시만요 요약본: 빈곤한 사람에게 부족한 만큼의 생계를 보충합니다.",
+    "e": "보충성의 원리는 국가가 일방적으로 정액을 지급하는 것이 아니라, 수급자가 스스로 확보한 자산과 소득을 먼저 평가한 뒤 최저생계비에 미달하는 그 '부족분'만을 보충적으로 지원한다는 원칙입니다."
+  },
+  {
+    "level": "중",
+    "q": "공공부조의 쟁점 중 '빈곤의 함정(Poverty Trap)'에 대한 상반된 해석으로 가장 알맞은 것은? [워크북 8장/강의 녹음]",
+    "o": ["세금을 많이 내는 부유층이 해외로 도피하는 현상이다.", "노동시장의 임금이 너무 낮아 공공부조 급여액(의료, 교육 혜택 등)과 차이가 거의 없게 되어, 노동을 포기하고 수급 자격에 머무르려 하는 현상을 '도덕적 해이' 또는 '학습된 무기력'으로 다르게 해석하는 것이다.", "국가가 빈민들을 구덩이에 몰아넣어 강제로 일하게 하는 정책이다.", "모든 수급자가 로또에 당첨되어 자발적으로 수급을 포기하는 현상이다."],
+    "a": 1,
+    "h": "잠시만요 요약본: 소득이 약간 증가하면 혜택을 잃게 되어 구직을 꺼리는 현상입니다.",
+    "e": "빈곤의 함정은 취업하여 최저생계비를 1원이라도 넘기면 기존의 모든 복지 혜택(의료, 임대주택 등)이 박탈되므로 구직을 포기하는 현상입니다. 이를 개인의 나태(도덕적 해이)로 보느냐, 저임금 구조가 낳은 절망(학습된 무기력)으로 보느냐의 쟁점이 있습니다."
+  },
+  {
+    "level": "중",
+    "q": "영국 보수당 데이비드 캐머런(Cameron) 총리가 주장한 '큰 사회론(Big Society)'이 복지 정책에 미친 방향성은 무엇인가? [워크북 8장]",
+    "o": ["중앙 정부의 복지 예산과 개입을 획기적으로 축소하고, 빈곤 돌봄의 책임을 가족, 자선단체 등 민간 사회의 자발적 역할로 떠넘겼다.", "국가 주도의 복지를 두 배 이상 확대하여 모든 국민에게 기본소득을 지급했다.", "학교와 병원을 모두 국유화하여 큰 국가를 만들었다.", "공공부조를 없애고 모든 빈민을 군대에 징집했다."],
+    "a": 0,
+    "h": "워크북 요약: 'Not State But Society' 구호로 국가 복지를 대폭 축소했습니다.",
+    "e": "캐머런의 큰 사회론은 국가(State)의 복지 재정 부담을 줄이기 위해, 지역 사회나 자선 단체(Society)가 자원봉사를 통해 복지의 빈자리를 채워야 한다는 신자유주의적 복지 축소 정책이었습니다."
+  },
+  {
+    "level": "중",
+    "q": "영화 「나, 다니엘 블레이크」의 주인공 다니엘이 맞닥뜨린 영국 공공부조 시스템의 비극적 맹점은 무엇이었는가? [워크북 8장]",
+    "o": ["수당이 너무 많이 지급되어 일을 안 하고 사치를 부리다 건강이 나빠졌다.", "심장병으로 근로가 불가능함에도 까다롭고 비인간적인 근로 능력 조사를 통과하지 못해 질병 수당이 끊기고, 항소 절차 중 관료주의에 부딪혀 사망하게 된다.", "의사가 치료를 거부하여 질병이 악화되었다.", "정부가 억지로 일자리를 제공하여 과로로 사망했다."],
+    "a": 1,
+    "h": "워크북 요약: 근로 능력 심사에서 탈락하고 항소 절차 중 비극을 맞습니다.",
+    "e": "영화는 근로 연계 복지가 질병 등으로 정말 일할 수 없는 취약계층조차 의심하고 까다로운 서류 증명을 요구하여, 결국 절망 속으로 몰아넣는 비인간적 관료주의의 민낯을 고발합니다."
+  },
+  {
+    "level": "중",
+    "q": "근로 연계 복지에 대해 보수주의자와 진보주의자가 갖는 이념적 평가의 차이를 바르게 짝지은 것은? [워크북 8장/강의 녹음]",
+    "o": ["보수주의자: 구빈법 시대로의 퇴보다 / 진보주의자: 복지 의존성을 줄인다", "보수주의자: 탈상품화의 완성이다 / 진보주의자: 노동의 신성함이다", "보수주의자: 복지 의존을 줄이고 근로 유인을 높여 시스템 효율을 올린다 / 진보주의자: 노동을 강제하는 노동의 재상품화이며 취약계층에 대한 억압이다", "보수주의자: 복지 예산을 대폭 늘리자 / 진보주의자: 복지를 모두 없애자"],
+    "a": 2,
+    "h": "강의 녹음/워크북 도표: 근로 연계 복지에 대한 양측의 극명한 해석 차이입니다.",
+    "e": "보수주의는 복지병(나태)을 치유하는 수단으로 찬성하지만, 진보주의는 근로 능력이 없는 사람까지 시장으로 내몰아 인권을 침해하는 억압적 강제 노동(재상품화)이라고 비판합니다."
+  },
+  {
+    "level": "중",
+    "q": "절대적 빈곤선 산정 방식 중 '반물량 방식'이 빈곤을 측정할 때 직면하는 가장 큰 이론적 쟁점은 무엇인가? [워크북 8장]",
+    "o": ["의료비와 주거비의 총합을 어떻게 뺄 것인가", "최저 식료품비를 도출한 뒤 곱하는 '엥겔계수(식비 비중)'가 현대의 다양한 소비 패턴이나 소득 수준을 제대로 반영하는 지표인가", "수급자의 주관적 우울감 지수를 수치화할 수 있는가", "국가의 GDP 성장률을 어떻게 식비에 더할 것인가"],
+    "a": 1,
+    "h": "워크북 요약: 반물량 방식은 주로 식품 마켓 바스켓을 사용하므로 엥겔계수의 타당성이 쟁점입니다.",
+    "e": "반물량 방식은 최저 식료품비에 엥겔계수의 역수를 곱해 전체 생계비를 추정하는데, 현대에는 식생활 외에도 통신비, 주거비 등의 필수 지출이 커져 엥겔계수만으로 빈곤을 대변하기 어렵다는 비판을 받습니다."
+  },
+  {
+    "level": "중",
+    "q": "상대적 빈곤선을 설정할 때 '평균소득' 대신 '중위소득'을 주로 사용하는 통계적 이유는 무엇인가? [워크북 8장]",
+    "o": ["평균소득은 소득 불평등이 심할 경우 초고소득층에 의해 수치가 과대 상향되어 실제 대다수 국민의 생활 수준을 왜곡할 수 있기 때문이다.", "중위소득은 계산하기가 가장 쉽고 빠르기 때문이다.", "평균소득은 오직 근로소득만 포함하기 때문이다.", "중위소득은 무조건 평균소득보다 2배 이상 높은 값을 가지기 때문이다."],
+    "a": 0,
+    "h": "워크북 요약: 평균소득은 불평등이 클수록 왜곡된 수치를 낼 수 있습니다.",
+    "e": "소득 격차가 클 때 빌 게이츠 같은 극소수의 초고소득자가 전체 평균소득을 대폭 끌어올리는 왜곡이 발생하므로, 전체 가구를 순서대로 세웠을 때 정중앙에 위치한 '중위소득'이 체감 빈곤을 더 정확히 반영합니다."
+  },
+  {
+    "level": "중",
+    "q": "우리나라 공공부조의 가족 부양 의무제 쟁점과 거리가 먼 것은? [워크북 8장]",
+    "o": ["부양 의무자의 범위를 어디까지 한정할 것인가 (예: 사위, 며느리 포함 여부)", "가족의 부양 의무를 국가가 강제로 징수할 것인가", "부양 능력을 판별할 때 소득뿐만 아니라 실제 돌봄 제공 여부를 반영할 것인가", "동네 이웃 주민들에게 부양의 연대 책임을 지울 것인가"],
+    "a": 3,
+    "h": "잠시만요 요약본: 가족부양 의무 범위, 노동 연계 여부 등이 쟁점입니다.",
+    "e": "가족 부양 의무제는 혈연이나 혼인으로 맺어진 직계 가족(부모, 자녀, 배우자 등)에게 적용되는 쟁점이며, 이웃 주민에게 책임을 묻는 것은 논의 대상이 아닙니다."
+  },
+  {
+    "level": "중",
+    "q": "영국 토니 블레어(Tony Blair) 총리의 '제3의 길'이 공공부조 정책에 도입한 핵심 패러다임 변화는 무엇인가? [워크북 8장]",
+    "o": ["모든 국민에게 매월 100만 원씩 기본소득 지급", "국가 주도의 계획 경제 체제 부활", "단순 현금 지원(실업수당)을 지양하고, 일(노동)과 복지를 연계하는 '생산적 복지(근로 연계 복지)' 노선 도입", "사립학교 전면 폐지 및 무상 공교육 100% 달성"],
+    "a": 2,
+    "h": "워크북 요약: 일과 복지가 양립하는 생산적 복지(근로 연계 복지)를 주장했습니다.",
+    "e": "제3의 길은 전통적 사민주의(국가 개입 복지)와 신자유주의(시장 방임) 사이의 대안으로, 수급자에게 근로 동기와 훈련을 부여하여 시장 참여를 조건으로 복지를 제공하는 'Welfare to Work' 정책을 확립했습니다."}
+        // 
+    ];
+
+    let curIdx = 0;
+    let wrongCount = 0; // 틀린 횟수 추적 변수
+
+    function loadQuestion() {
+        wrongCount = 0;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    function checkAnswer(idx, btn) {
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+        
+        if (idx === q.a) {
+            // 정답을 맞춘 경우
+            btn.classList.add('correct');
+            allBtns.forEach(b => b.style.pointerEvents = 'none'); // 클릭 방지
+            showExplanation();
+        } else {
+            // 틀린 경우
+            wrongCount++;
+            btn.classList.add('wrong');
+            btn.style.pointerEvents = 'none'; // 틀린 버튼 다시 못 누르게
+            
+            if (wrongCount === 1) {
+                // 첫 번째 틀림: 힌트만 보여줌
+                document.getElementById('hint-text').innerText = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                // 두 번째 틀림: 정답 공개
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                showExplanation();
+            }
+        }
+    }
+
+    function showExplanation() {
+        const q = quizData[curIdx];
+        document.getElementById('exp-text').innerText = q.e;
+        document.getElementById('exp-box').style.display = 'block';
+        document.getElementById('next-btn').style.display = 'block';
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            document.getElementById('quiz-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'block';
+            document.getElementById('result-msg').innerText = "8강 학습을 완료하셨습니다. 수고하셨습니다, 학우님!";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>

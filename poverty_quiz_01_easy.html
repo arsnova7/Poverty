@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>빈곤론 퀴즈 [1강 - 초급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); opacity: 0.6; }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; color: #856404; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제1강: 사회복지와 빈곤 (초급)</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>정답 및 해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <p id="result-msg"></p>
+        <button class="option-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="option-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    /* [노트북LM 데이터]
+       형식: {"level": "하", "q": "질문", "o": ["보기1","보기2","보기3","보기4"], "a": 정답번호, "h": "힌트", "e": "해설"}
+    */
+    const quizData = [
+        {"level": "하", "q": "개인과 가족의 삶, 지역사회, 국가에 영향을 미치는 사회적 위험으로서 근대 사회복지가 등장하게 된 핵심 배경은 무엇인가? [잠시만요 요약본]",
+    "o": ["질병", "빈곤", "무지", "불결"],
+    "a": 1,
+    "h": "잠시만요 요약본: 빈곤은 개인과 가족, 지역사회 등에 영향을 미치는 사회적 위험입니다.",
+    "e": "빈곤은 단순한 경제적 결핍을 넘어 사회 전체에 영향을 미치는 사회적 위험이며, 사회복지는 근대사회의 빈곤을 해결하기 위해 등장한 공적 대응입니다."
+  },
+  {
+    "level": "하",
+    "q": "기본적인 생존을 위한 자원조차 확보하지 못하는 척박한 상태를 가리키는 빈곤의 유형은 무엇인가? [잠시만요 요약본]",
+    "o": ["절대적 빈곤", "상대적 빈곤", "다차원적 빈곤", "주관적 빈곤"],
+    "a": 0,
+    "h": "잠시만요 요약본: 기본적인 생존을 위한 자원조차 확보하지 못하는 상태를 뜻합니다.",
+    "e": "절대적 빈곤은 생물학적 생존에 필수적인 최소한의 자원조차 미달하는 상태를 의미합니다."
+  },
+  {
+    "level": "하",
+    "q": "사회적, 경제적 자원이나 기회의 부족으로 인해 다른 사람들과 비교했을 때 빈곤상태에 처하게 되는 것을 무엇이라 하는가? [잠시만요 요약본]",
+    "o": ["상대적 빈곤", "구조적 빈곤", "절대적 빈곤", "객관적 빈곤"],
+    "a": 0,
+    "h": "잠시만요 요약본: 다른 사람들과 비교했을 때 처하게 되는 빈곤상태입니다.",
+    "e": "상대적 빈곤은 사회 전반의 평균적인 생활수준과 비교하여 격차가 크거나 소외된 상태를 말합니다."
+  },
+  {
+    "level": "하",
+    "q": "빈곤을 '지속적으로 궁핍하고 불결한 상태에 있는 것'으로 정의하여 주거 빈민의 상태를 연상시킨 학자는 누구인가? [교재 1장]",
+    "o": ["피터 타운센드", "존 로크", "시봄 라운트리", "카밀로 토레스 레스트레포"],
+    "a": 2,
+    "h": "교재: 궁핍하고 불결한 상태를 강조한 고전적 빈곤 연구자입니다.",
+    "e": "시봄 라운트리는 빈곤을 지속적으로 궁핍하고 불결한 물리적 한계 상태로 보았습니다."
+  },
+  {
+    "level": "하",
+    "q": "빈곤을 단순히 생존 물자의 부족을 넘어 '사회에서 일반적이거나 관습적인 식품, 위락 시설, 서비스, 활동 등이 결여된 상태'로 확장하여 정의한 학자는? [교재 1장]",
+    "o": ["피터 타운센드", "존 갤브레이스", "시봄 라운트리", "찰스 부스"],
+    "a": 0,
+    "h": "교재: 관습적인 활동과 참여의 결여를 빈곤으로 본 학자입니다.",
+    "e": "타운센드는 상대적 박탈과 사회적 참여에서의 배제를 빈곤의 핵심으로 정의하였습니다."
+  },
+  {
+    "level": "하",
+    "q": "기아와 영양실조뿐만 아니라 '사회적 차별과 배제, 의사결정 참여의 제약'까지 가장 포괄적으로 빈곤을 정의한 국제기구는? [교재 1장]",
+    "o": ["세계은행(WB)", "유엔(UN)", "국제노동기구(ILO)", "미국사회복지사협회(NASW)"],
+    "a": 1,
+    "h": "교재: 권리와 의사결정 참여 제약까지 빈곤으로 포함시킨 국제기구입니다.",
+    "e": "UN은 빈곤을 물질적 결핍뿐만 아니라 사회적·정치적 참여 제약 등 다차원적 결핍 상태로 정의합니다."
+  },
+  {
+    "level": "하",
+    "q": "빈곤의 5가지 특성 중 과거에는 달걀프라이가 부유함의 상징이었으나 현대에는 아닌 것처럼, 시·공간적 맥락에서 규정된다는 특성은? [교재 1장]",
+    "o": ["다차원성", "상대성", "주관성", "점진성"],
+    "a": 1,
+    "h": "교재: 사회의 경제 수준, 생활양식에 따라 달라진다는 속성입니다.",
+    "e": "상대성(relativity)은 사회적, 경제적 발달 수준과 환경의 변화에 따라 빈곤의 기준이 달라짐을 의미합니다."
+  },
+  {
+    "level": "하",
+    "q": "빈곤 상태와 비빈곤 상태가 단절적으로 구분되지 않고, 층위별로 연속적으로 변화한다는 빈곤의 특성은? [교재 1장]",
+    "o": ["지속성", "상대성", "점진성", "주관성"],
+    "a": 2,
+    "h": "교재: 빈곤층 내부에도 여러 계층이 연속적으로 존재한다는 속성입니다.",
+    "e": "점진성(graduality)은 가난과 안 가난이 이분법적으로 나뉘는 것이 아니라 다양한 계층이 연속해 있음을 뜻합니다."
+  },
+  {
+    "level": "하",
+    "q": "빈곤이 단일 원인이 아니라 소득, 교육, 의료, 주거 등 생활의 다양한 영역과 상호 연관되어 나타난다는 빈곤의 특성은? [교재 1장]",
+    "o": ["다차원성", "점진성", "지속성", "상대성"],
+    "a": 0,
+    "h": "교재: 단일 영역이 아니라 제반 영역에서 나타나는 결핍의 특성입니다.",
+    "e": "다차원성(multidimensionality)은 빈곤이 단순히 소득 결여를 넘어 건강, 주거, 교육 등 삶의 전 영역에서 나타남을 의미합니다."
+  },
+  {
+    "level": "하",
+    "q": "재해로 인한 일시적 소득 상실이나 장기적으로 영구히 불리한 지위에 놓이는 등, 빈곤이 시간 차원과 관련되어 있다는 특성은? [교재 1장]",
+    "o": ["점진성", "다차원성", "지속성", "주관성"],
+    "a": 2,
+    "h": "교재: 시간적 흐름에서 단기적/구조적으로 유지되는 특성입니다.",
+    "e": "지속성(persistence)은 빈곤이 일시적 현상인지 장기적 구조적 현상인지 시간적 지속 여부를 파악하는 특성입니다."
+  },
+  {
+    "level": "하",
+    "q": "빈곤 여부가 객관적 지위나 통계가 아니라 각 개인이 느끼는 심리적·내적 기준(기대 수준)에 따라 좌우된다는 특성은? [교재 1장]",
+    "o": ["주관성", "상대성", "지속성", "다차원성"],
+    "a": 0,
+    "h": "교재: 100만 원으로 만족하는 사람과 150만 원이 필요한 사람의 차이입니다.",
+    "e": "주관성(subjectivity)은 객관적 소득과 별개로 개인이 체감하는 기대 수준과 박탈감에 좌우됨을 의미합니다."
+  },
+  {
+    "level": "하",
+    "q": "다른 사회 구성원과 비교했을 때 눈에 띄게 열악한 상태를 의미하며, 상대적 빈곤 개념과 밀접한 이 용어는? [교재 1장]",
+    "o": ["생계(livelihood)", "박탈(deprivation)", "궁핍(destitution)", "생존(survival)"],
+    "a": 1,
+    "h": "교재: 특정 패딩을 입지 못한 학생이 느끼는 결핍감을 설명하는 용어입니다.",
+    "e": "박탈(deprivation)은 주변 비교 대상과 견주어 눈에 띄게 자원이 열악하여 느끼는 심리적/물리적 상태입니다."
+  },
+  {
+    "level": "하",
+    "q": "예기치 못한 자연재해 등으로 자원이 사실상 완전히 없거나 전무하여 이른바 '찢어지게 가난한' 극한 상황에 처한 것을 뜻하는 용어는? [교재 1장]",
+    "o": ["박탈(deprivation)", "점진성(graduality)", "궁핍(destitution)", "주관성(subjectivity)"],
+    "a": 2,
+    "h": "교재: 자원이 완전히 제로에 가까운 최악의 빈곤 상태입니다.",
+    "e": "궁핍(destitution)은 생존 수단이 전무하여 일시적/지속적으로 물리적 한계에 부딪힌 극빈 상태를 의미합니다."
+  },
+  {
+    "level": "하",
+    "q": "1601년 제정되어 국가가 제도적으로 빈곤 문제 해결에 앞장서기 시작한 공공부조의 역사적 이정표가 된 영국의 법은? [교재 1장]",
+    "o": ["신빈민법", "스핀햄랜드법", "엘리자베스 빈민법", "작업장 테스트법"],
+    "a": 2,
+    "h": "교재: 근대 사회복지가 국가 책임으로 등장한 최초의 제도적 개입입니다.",
+    "e": "엘리자베스 빈민법(1601)은 국가가 조세를 거두어 빈민을 구제하도록 법제화한 공공부조의 시발점입니다."
+  },
+  {
+    "level": "하",
+    "q": "존 로크의 천부인권 사상을 토대로, 인간이 마땅히 보장받아야 하며 빈곤 퇴치의 가장 근본적인 철학적 근거가 되는 권리는? [교재 1장]",
+    "o": ["자유권", "소유권", "인권", "투표권"],
+    "a": 2,
+    "h": "잠시만요 요약본: 빈곤 문제를 구조적 문제로 인식하고 이것 중심의 접근을 통해 해결해야 합니다.",
+    "e": "빈곤은 인간의 기본적 생존권과 존엄성을 파괴하므로 인권(Human Rights) 차원에서 접근하여 해결해야 합니다."}
+        // 
+    ];
+
+    let curIdx = 0;
+    let wrongCount = 0; // 틀린 횟수 추적 변수
+
+    function loadQuestion() {
+        wrongCount = 0;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    function checkAnswer(idx, btn) {
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+        
+        if (idx === q.a) {
+            // 정답을 맞춘 경우
+            btn.classList.add('correct');
+            allBtns.forEach(b => b.style.pointerEvents = 'none'); // 클릭 방지
+            showExplanation();
+        } else {
+            // 틀린 경우
+            wrongCount++;
+            btn.classList.add('wrong');
+            btn.style.pointerEvents = 'none'; // 틀린 버튼 다시 못 누르게
+            
+            if (wrongCount === 1) {
+                // 첫 번째 틀림: 힌트만 보여줌
+                document.getElementById('hint-text').innerText = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                // 두 번째 틀림: 정답 공개
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                showExplanation();
+            }
+        }
+    }
+
+    function showExplanation() {
+        const q = quizData[curIdx];
+        document.getElementById('exp-text').innerText = q.e;
+        document.getElementById('exp-box').style.display = 'block';
+        document.getElementById('next-btn').style.display = 'block';
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            document.getElementById('quiz-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'block';
+            document.getElementById('result-msg').innerText = "1강 학습을 완료하셨습니다. 수고하셨습니다, 학우님!";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>

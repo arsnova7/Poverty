@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3강 요점 정리 - 잠시만요! 꼭 기억하세요</title>
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-green: #009432;
+            --accent-orange: #e67e22;
+            --light-bg: #f8fbf8;
+            --text-dark: #2f3640;
+        }
+        body { font-family: 'Pretendard', sans-serif; background: #eef2f3; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .summary-container { 
+            max-width: 700px; width: 100%; background: white; border-radius: 30px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1); padding: 40px; position: relative;
+        }
+        .top-badge { 
+            background: var(--primary-green); color: white; display: inline-block; 
+            padding: 8px 20px; border-radius: 50px; font-size: 0.9rem; font-weight: 700; 
+            margin-bottom: 20px;
+        }
+        h1 { font-size: 1.8rem; color: var(--text-dark); margin-bottom: 25px; border-bottom: 2px solid #eee; padding-bottom: 15px; }
+        
+        .section-title { font-size: 1.2rem; font-weight: 800; color: var(--text-dark); margin: 30px 0 15px 0; display: flex; align-items: center; }
+        .section-title::before { content: '•'; color: var(--primary-green); margin-right: 10px; font-size: 1.5rem; }
+
+        .concept-item { 
+            background: var(--light-bg); border-left: 5px solid var(--primary-green); 
+            padding: 20px; margin-bottom: 15px; border-radius: 0 15px 15px 0;
+        }
+        .content-text { line-height: 1.8; color: #444; font-size: 1.05rem; margin: 0; }
+        
+        /* 로크 vs 루소 표 디자인 */
+        .compare-table { width: 100%; border-collapse: collapse; margin: 20px 0; background: #fff; border-radius: 15px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .compare-table th { background: #f1f2f6; padding: 15px; color: var(--text-dark); font-weight: 800; border: 1px solid #ddd; }
+        .compare-table td { padding: 15px; border: 1px solid #ddd; vertical-align: top; font-size: 0.95rem; line-height: 1.6; }
+        .highlight-text { color: var(--accent-orange); font-weight: 700; }
+
+        .summary-footer { background: #f9f9f9; padding: 20px; border-radius: 15px; margin-top: 30px; text-align: center; font-weight: 700; color: var(--primary-green); }
+        
+        .back-btn { 
+            display: block; text-align: center; padding: 18px; background: var(--text-dark); 
+            color: white; text-decoration: none; border-radius: 15px; margin-top: 30px; 
+            font-weight: 700; transition: 0.3s;
+        }
+    </style>
+</head>
+<body>
+
+<div class="summary-container">
+    <div class="top-badge">💡 교수님 왈(曰)</div>
+    <h1>3강: 빈곤의 관점</h1>
+
+    <div class="section-title">빈곤의 원인</div>
+    <div class="concept-item">
+        <p class="content-text">경제적 요인 / 구조적 요인 / 정치적 요인 / 사회·문화적 요인 / 국제적 요인<br>
+        <strong>⟱ 모든 요인이 결합되어 빈곤문제를 복합적으로 만들어 냄</strong></p>
+    </div>
+
+    <div class="section-title">사유재산에 대한 두 시각</div>
+    <table class="compare-table">
+        <tr>
+            <th>로크 (Locke)</th>
+            <th>루소 (Rousseau)</th>
+        </tr>
+        <tr>
+            <td>• 17세기 영국 / 명예혁명 이후 입헌군주제<br>
+                • 개인의 자유와 <span class="highlight-text">사유재산 보호</span>가 중요<br>
+                • 사유재산: 노동을 통한 정당한 산물, 빈곤해결의 핵심<br>
+                • 시장개입 최소화 ➔ <span class="highlight-text">경제적 자유주의</span> 영향</td>
+            <td>• 18세기 프랑스 / 절대왕정 / 귀족중심 구조<br>
+                • 사유재산: <span class="highlight-text">빈곤과 불평등의 원인</span><br>
+                • 시장 규제 필요, 정부의 적극적 개입 및 재분배 강조<br>
+                • ➔ <span class="highlight-text">사회민주주의</span> 영향</td>
+        </tr>
+    </table>
+
+    <div class="section-title">이데올로기별 빈곤의 관점</div>
+    <div class="concept-item">
+        <p class="content-text">
+            <strong>1. 자유주의:</strong> 개인의 노력과 시장 중심으로 빈곤 해결<br>
+            <strong>2. 수정자본주의:</strong> 정부 개입을 통해 자본주의 문제 해결<br>
+            <strong>3. 사회주의:</strong> 빈곤은 구조적 문제. 재분배, 사적 소유의 사회화, 자본주의 체제 해체 주장
+        </p>
+    </div>
+
+    <div class="section-title">사회적 배제의 관점</div>
+    <div class="concept-item" style="border-left-color: var(--accent-orange);">
+        <p class="content-text">
+            경제적, 사회적, 정치적, 문화적 참여의 부족 (주류사회로부터 소외)<br><br>
+            • <strong>신자유주의:</strong> 도덕규범에서 벗어난 개인의 일탈적 행위<br>
+            • <strong>공화주의:</strong> 개인과 사회의 관계 단절<br>
+            • <strong>사회민주주의:</strong> 불평등한 사회구조와 자원 배분의 문제
+        </p>
+    </div>
+
+    <div class="summary-footer">
+        "관점에 따라 해결책이 달라집니다. <br>인권 중심의 구조적 접근을 잊지 마세요!"
+    </div>
+
+    <a href="index.html" class="back-btn">학습 완료! 메인으로</a>
+</div>
+
+</body>
+</html>

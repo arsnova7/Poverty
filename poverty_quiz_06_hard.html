@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>빈곤론 퀴즈 [6강 - 상급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); opacity: 0.6; }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; color: #856404; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제6강: 빈곤, 교육과 노동 (상급)</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>정답 및 해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <p id="result-msg"></p>
+        <button class="option-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="option-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    /* [노트북LM 데이터]
+       형식: {"level": "상", "q": "질문", "o": ["보기1","보기2","보기3","보기4"], "a": 정답번호, "h": "힌트", "e": "해설"}
+    */
+    const quizData = [
+        {"level": "상", "q": "다음 중 워킹 푸어(Working Poor)에 해당하지 않는 사람은? (기출 변형) [기출문제_2025 6강]",
+    "o": ["비정규직으로 매일 출근하지만 임금이 너무 낮아 생계가 어려운 사람", "주 6일 야간 경비로 일하지만 최저생계비에 못 미치는 월급을 받는 사람", "일은 전혀 하지 않으나 부모의 막대한 재산과 지원으로 호화롭게 생활하는 사람", "플랫폼 배달 노동을 하루 10시간씩 강행하지만 플랫폼 수수료와 이륜차 렌트비 등을 제하면 수입이 빈곤선 아래인 사람"],
+    "a": 2,
+    "h": "기출문제 해설: 워킹 푸어는 '일을 하고 있음에도 불구하고 빈곤한 상태'를 의미합니다.",
+    "e": "워킹 푸어의 핵심 전제는 노동시장 참여(근로)입니다. 일하지 않고 부모의 자산으로 부유하게 사는 사람은 근로자도 아닐뿐더러 빈곤층도 아닙니다."
+  },
+  {
+    "level": "상",
+    "q": "능력주의(Meritocracy)가 사회적 불평등을 합리화하고 정당화한다는 비판의 핵심 논리로 가장 타당한 것은? (기출 변형) [기출문제_2025 6강]",
+    "o": ["사람마다 타고난 지능은 완전히 동일하므로 노력의 부족만을 탓할 수 있다.", "국가가 모든 사람의 출발선을 완벽하게 100% 일치시켜 주었으므로 패배는 변명일 뿐이다.", "실제로는 부모의 부와 사회적 지위 등 출발선 자체가 근본적으로 다르기 때문에, 결과적 격차를 온전히 개인의 순수한 노력과 능력 차이로만 평가하는 것은 부당하다.", "능력주의는 하층 계급에게 무조건적으로 기본소득을 지급하려는 이데올로기이다."],
+    "a": 2,
+    "h": "기출문제 해설: 불평등한 출발점을 무시한 채 결과를 개인의 책임으로 돌리는 점이 비판받습니다.",
+    "e": "능력주의는 부유한 환경에서 양질의 사교육을 받은 승자의 결과를 '정당한 자신의 노력'으로 치장하여 세습을 정당화하고, 출발선이 불리해 패배한 자들을 '노력 부족'으로 낙인찍어 불평등 구조를 은폐합니다."
+  },
+  {
+    "level": "상",
+    "q": "다음 중 교육 기회의 '보장적 평등'에 대한 설명과 가장 거리가 먼 것은? (기출 변형) [기출문제_2025 6강]",
+    "o": ["가난한 학생들이 경제적 이유로 학교를 그만두지 않도록 무상 급식과 등록금을 지원하는 것", "농어촌이나 섬 지역 등 지리적·환경적 요인으로 교육받기 어려운 계층에게 접근성을 높여주는 것", "모든 학생의 학업 수준을 똑같이 통일시키기 위해 우수 학생을 처벌하고 획일적 점수를 부여하는 것", "지적·신체적 장애가 있는 학생이 물리적으로 학교에 등교할 수 있도록 특수 차량과 시설 접근성을 보장하는 것"],
+    "a": 2,
+    "h": "기출문제 해설: 보장적 평등은 '접근성(Access)'과 취학의 경제적 장애물을 제거하는 것입니다.",
+    "e": "보장적 평등은 누구나 학교에 다닐 수 있는 실질적 여건(무상교육, 장학금, 통학 지원)을 마련해 주는 것이지, 결과적인 학업 성취도를 하향 평준화하거나 억압적으로 획일화하는 것이 아닙니다."
+  },
+  {
+    "level": "상",
+    "q": "베버리지(Beveridge)가 빈곤 탈출의 핵심으로 꼽은 '무지(Ignorance)' 극복을 위한 정책적 접근에 해당하지 않는 것은? (기출 변형) [기출문제_2025 6강]",
+    "o": ["시민이 독재자의 선동에 속지 않도록 민주주의 시민 교육과 평생교육을 확대한다.", "자본 시장의 자유 경쟁 논리에 교육을 전면 맡겨 사교육 산업을 극대화한다.", "의무교육 제도를 강화하여 아동들이 최소한의 학습권을 보장받게 한다.", "성인들을 대상으로 한 고등교육의 기회를 폭넓게 확대한다."],
+    "a": 1,
+    "h": "기출문제 해설: 베버리지는 국가 개입을 통한 보편적 복지와 공교육의 강화를 주장했습니다.",
+    "e": "베버리지는 무지를 해결하기 위해 의무교육, 아동교육, 평생교육 등 공교육 체계의 확대를 주장했습니다. 사교육 시장에 내맡겨 교육 불평등을 조장하는 것은 그의 보편적 복지 철학과 정면으로 대치됩니다."
+  },
+  {
+    "level": "상",
+    "q": "최근 노동시장의 이중구조 심화와 관련하여, 다음 중 '플랫폼 노동(Platform Labor)'에 해당하지 않는 것은? (기출 변형) [기출문제_2025 6강]",
+    "o": ["스마트폰 앱(App) 알고리즘의 배차 지시에 따라 음식을 배달하는 라이더", "디지털 플랫폼 웹사이트를 통해 건당 번역이나 디자인 일감을 수주받아 일하는 프리랜서 노동자", "특정 회사의 본사 사무실에 상주하며 4대 보험과 정규직 신분을 보장받고 매월 고정 급여를 받는 회계사", "가사 도우미 중개 앱을 통해 그때그때 고객과 매칭되어 시급을 받고 일하는 청소 노동자"],
+    "a": 2,
+    "h": "기출문제 해설: 정규직 신분으로 오프라인에 상주하며 일하는 것은 전통적 노동입니다.",
+    "e": "플랫폼 노동은 디지털 앱이나 웹사이트를 매개로 노무를 제공하고 건당 수수료를 받는 비정형 노동 형태입니다. 4대 보험이 보장된 본사 상주 정규직 회계사는 전형적인 임금 근로자입니다."
+  },
+  {
+    "level": "상",
+    "q": "존 롤스(John Rawls)의 정의론적 관점이나 적극적 우대조치(Affirmative Action)와 맥락을 같이 하며, 국가가 사회적 약자나 학업 성취가 크게 뒤처지는 아동들에게 자원을 집중 배분하여 보상 교육을 실시하는 교육 평등의 유형은 무엇인가? [기출문제 분석]",
+    "o": ["허용적 평등", "보장적 평등", "조건(과정)의 평등", "결과의 평등"],
+    "a": 3,
+    "h": "기출분석 자료: 격차를 좁혀 최종 도착점에서의 평등을 지향하는 가장 적극적인 단계입니다.",
+    "e": "교육 '결과의 평등'은 출발선과 능력이 달라도 최종적인 학업 성취 수준을 일정 수준 이상으로 끌어올리기 위해, 빈곤 아동 등 불리한 집단에게 더 많은 교육 예산과 복지 인력을 투입하는 보상적 평등을 의미합니다."
+  },
+  {
+    "level": "상",
+    "q": "스웨덴의 렌-마이드너(Rehn-Meidner) 모델이 지향하는 노동시장 정책 중, 기업 단위의 개별 교섭을 막고 산별 노조가 주도하여 '수익성이 나쁜 기업의 노동자도 깎이지 않은 적정 임금을, 수익성이 좋은 기업의 노동자도 과도한 임금 인상을 자제'하게 만드는 핵심 연대 정책은? [기출분석 및 강의록]",
+    "o": ["동일 노동 동일 임금(연대 임금 정책)", "전 국민 기본소득 100% 지급제", "능력주의 성과 연봉제 전면 도입", "공기업 전면 민영화 및 비정규직화"],
+    "a": 0,
+    "h": "기출분석 및 강의록: 동일한 일을 하면 흑자 기업이든 적자 기업이든 같은 임금을 받게 합니다.",
+    "e": "렌-마이드너 모델의 '동일 노동 동일 임금(연대 임금)' 원칙은, 잘나가는 기업 노동자의 임금 인상을 자제시켜 인플레이션을 막고, 한계 기업은 높은 임금을 감당 못 해 도태되게 함으로써 산업 구조조정과 노동자 간 임금 격차 해소를 동시에 달성하는 정책입니다."
+  },
+  {
+    "level": "상",
+    "q": "더글러스 다우니의 『학교의 재발견』에서 제안하는 학교와 불평등 문제 해소에 대한 근본적인 사회정책적 접근법은 무엇인가? [기출분석 및 강의록]",
+    "o": ["교사들의 무능력이 교육 실패의 유일한 원인이므로 교원 평가 제도를 극도로 강화해야 한다.", "학교 교육 자체를 비판하며 폐지하기보다는, 주거 빈곤과 부모의 저임금 등 아이들이 처한 '학교 밖 출발선의 불평등'을 해결하기 위해 사회적 자원 재분배(사회권 보장)를 우선해야 한다.", "사교육 시장을 학교 내부로 완전히 끌어들여 상업화해야 한다.", "가난한 학생들만 모아놓은 특수 격리 학교를 신설해야 한다."],
+    "a": 1,
+    "h": "강의록 및 교재: 원인은 학교가 아니라 학교 밖 열악한 환경을 가진 '가난한 아이들'의 처지입니다.",
+    "e": "다우니는 학교가 오히려 방학 기간보다 불평등 격차를 줄여주는 긍정적 기능을 한다고 보았으며, 진정한 해결책은 빈곤 지역 아이들의 열악한 가정 환경을 개선하는 거시적인 사회권(복지, 주거, 소득) 보장이라고 역설했습니다."
+  },
+  {
+    "level": "상",
+    "q": "능력주의(Meritocracy) 비판 논의 중 '능력 측정의 불완전성 문제'를 가장 타당하게 지적한 논리는 무엇인가? [강의록 및 교재]",
+    "o": ["IQ 검사는 인류가 발명한 가장 완벽하고 오차 없는 신성한 도구이기 때문이다.", "시험 성적과 능력 평가에는 그날의 컨디션(우연적 요인)뿐만 아니라 부모가 투입한 막대한 사교육비, 문화적 자본 등 사회경제적 배경이 강하게 개입되므로 순수한 개인의 능력만을 도출하여 측정하는 것은 사실상 불가능하다.", "측정 도구가 고장 났기 때문이다.", "능력이 높은 사람일수록 시험 점수를 고의로 낮게 받으려는 심리적 역설 때문이다."],
+    "a": 1,
+    "h": "교재 요약: 지능과 노력 외의 환경적 변수가 너무 많이 작용합니다.",
+    "e": "현대 사회에서 개인의 '능력'이라고 포장되는 학력, 시험 점수, 스펙 등은 본인의 순수한 재능과 노력이라기보다 부모의 경제적 지원과 정보력(사교육)의 결과물인 경우가 많아, 공정한 척도로 작동할 수 없다는 비판을 받습니다."
+  },
+  {
+    "level": "상",
+    "q": "현대 한국 사회에서 자본주의 도래 이후의 교육이 '계층 이동의 사다리'라는 본연의 기능을 상실하고 불평등을 재생산하는 기제로 전락했음을 실증적으로 가장 잘 입증하는 통계 현상은? [교재 심화]",
+    "o": ["모든 고등학생이 대학 진학을 포기하고 중소기업 생산직에 자발적으로 취업하는 현상", "소득 상위 20%의 월평균 사교육비 지출이 하위 20%보다 약 3배(약 100만 원 vs 37만 원)에 달하며, 서울 강남 3구 출신의 명문대 진학률이 압도적으로 높게 나타나는 현상", "지방 소규모 읍면 지역의 의대 진학률이 서울 강남 지역을 10배 이상 압도하는 현상", "고졸 출신과 명문대 출신의 생애 누적 임금 격차가 0원으로 수렴하는 현상"],
+    "a": 1,
+    "h": "강의록 데이터 분석: 사교육비 지출 격차가 명문대 진학 격차로 이어지는 실태입니다.",
+    "e": "한국 사회는 부모의 소득과 거주지에 따른 막대한 사교육비 투자가 상위권 대학 진학을 결정짓고, 이는 다시 안정적이고 고임금의 일자리(정규직) 획득으로 이어져 부와 지위가 세습되는 닫힌 구조를 수치로 보여주고 있습니다."
+  },
+  {
+    "level": "상",
+    "q": "영국의 웹 부부(Webb & Webb)가 1909년 발표한 '소수파 보고서'가 영국 빈곤 정책 및 베버리지 보고서의 교육관에 미친 결정적인 영향력은 무엇인가? [교재 및 기출분석]",
+    "o": ["아동의 빈곤은 부모의 도덕성 문제이므로 교육을 박탈하고 작업장에 수용해야 한다고 주장했다.", "가난한 지역 아이들이 제때 교육을 받지 못해 저임금 노동자로 전락하는 빈곤의 덫을 지적하며, 국가가 개입해 '무상교육'을 보장함으로써 악순환을 끊어야 한다는 논리를 제공했다.", "학교 교육을 폐지하고 귀족 자녀를 위한 가정교사 제도를 법제화했다.", "10세 이하 아동을 광산 노동에 투입하는 것이 경제적이라고 역설했다."],
+    "a": 1,
+    "h": "교재 요약: 빈곤 지역 아동들의 실태를 현장 조사하여 국가의 적극적 교육 지원을 촉구했습니다.",
+    "e": "웹 부부는 소수파 보고서에서 빈곤이 나태가 아닌 교육 부족과 질병 같은 사회 구조적 요인임을 지적하고 무상교육, 무상의료 등을 제안했으며, 이 진보적 구상은 훗날 베버리지 보고서 '5대 악' 척결 정책의 사상적 뼈대가 되었습니다."
+  },
+  {
+    "level": "상",
+    "q": "한나 아렌트(H. Arendt)의 '후니스(Whoness)'와 '왓니스(Whatness)' 개념을 교육 사회학적으로 빌려와 현대의 극단적 입시 및 취업 경쟁을 진단할 때, 가장 올바른 철학적 비판은 무엇인가? [강의록 심화]",
+    "o": ["학생 개개인이 품은 고유한 꿈, 인격, 관계적 역할인 '후니스'를 존중하기보다, 어느 대학, 어느 직급, 연봉 얼마라는 사회적 서열인 '왓니스'의 획득만을 교육의 유일한 목표로 강요함으로써 진정한 우정과 행복의 상실을 초래한다.", "왓니스야말로 인간의 참된 영혼이므로 이를 기르는 데 국정 역량을 집중해야 한다.", "학교는 후니스를 완전히 말살하고 왓니스만을 배양하는 군사 훈련소로 거듭나야 한다.", "경쟁에서 탈락한 이들은 왓니스가 부족하므로 법적 처벌을 받아야 한다."],
+    "a": 0,
+    "h": "강의록 요약: 타이틀(What)에 집착하는 사회는 무한 경쟁 각자도생을 낳습니다.",
+    "e": "현대 교육은 아이의 '누구 됨(Who)'이 아니라 사회가 정한 계급표(직위, 명문대 타이틀 등 Whatness)에 도달하도록 강제합니다. 그 결과 아이들은 서로를 연대의 대상이 아닌 짓밟아야 할 경쟁자로 인식해, 아리스토텔레스가 말한 탁월성을 발현하는 '좋은 우정의 공동체'가 붕괴됩니다."
+  },
+  {
+    "level": "상",
+    "q": "가이 스탠딩(Guy Standing) 등이 정의한 '프레카리아트(Precariat)' 계급이 현대 자본주의 하에서 과거의 프롤레타리아(전통적 정규직 노동자)보다 더욱 심각한 빈곤 위협에 직면하게 되는 구조적 핵심 이유는? [기출분석 및 강의록 심화]",
+    "o": ["이들은 기본적으로 노동을 혐오하여 출근 자체를 거부하기 때문이다.", "플랫폼, 일용직 등 단기 계약에 묶여 언제든 해고와 알고리즘 대체가 가능한 불안정성(Precariousness)의 극한에 놓여 있으면서도, 실업 급여나 산재 보험 등 전통적 복지 국가의 '사회 안전망(Social Safety Net)' 밖으로 완전히 배제되어 충격에 극도로 취약하기 때문이다.", "너무 높은 고액 임금을 받아 스스로 조기 은퇴를 선택하기 때문이다.", "국가가 이들에게만 세금을 90% 이상 징수하기 때문이다."],
+    "a": 1,
+    "h": "강의록 요약: 프레카리아트는 고용 불안정과 권리 박탈이라는 이중고를 겪습니다.",
+    "e": "과거 산업 시대의 노동계급(프롤레타리아)은 노조 조직화와 노동법, 4대 보험의 우산 아래 있었으나, 현대의 프레카리아트(플랫폼 노동자, 특수고용직 등)는 노동 유연화의 직격탄을 맞아 고용 불안정에 시달리며 제도적 보호막조차 없는 무방비 상태에 놓여 있습니다."
+  },
+  {
+    "level": "상",
+    "q": "1968년 혁명 이후 프랑스가 단행한 급진적 교육 개혁(대학 서열 폐지 및 1~4대학 체제 전환)이 겨냥한 근본적인 사회적 타깃과 그 이념적 목표는 무엇이었는가? [강의록 및 교재 심화]",
+    "o": ["대학을 엘리트 귀족들만의 전유물로 되돌리기 위함이었다.", "학생의 수능(바칼로레아) 점수에 따라 인간의 우열과 직업 계급이 영원히 결정되는 '시험 성적 중심의 학벌주의와 엘리트 권력 독점'을 타파하고, 계층 간 차별 없는 연대적 시민을 양성하기 위함이었다.", "대학의 연구 기능을 모두 폐지하고 직업 훈련소로 바꾸기 위함이었다.", "미국의 대학 체제를 그대로 모방하여 자본주의적 경쟁을 극대화하기 위함이었다."],
+    "a": 1,
+    "h": "교재 요약: '시험 성적으로 미래가 결정되지 않는 세상'을 꿈꾼 68혁명의 산물입니다.",
+    "e": "프랑스 68혁명은 소수 엘리트(그랑제콜 등)가 부와 권력을 독점하는 학벌주의 경쟁 체제에 분노하여, 대학의 평준화를 통해 성별, 인종, 계급에 따른 차별을 철폐하고 평등한 고등교육 기회를 실현하고자 했습니다."
+  },
+  {
+    "level": "상",
+    "q": "능력주의 비판과 맞닿아 있는 아리스토텔레스의 '탁월성(Excellence)' 개념을 현대 교육에 적용할 때, 마이클 영이 『능력주의』를 통해 최종적으로 역설하고자 했던 '진정한 기회 균등'의 실천 방향은 무엇인가? [기출 융합 심화]",
+    "o": ["학교는 단 하나의 표준화된 국·영·수 시험을 통해 아이들을 일렬로 세워 완벽한 서열화를 완성해야 한다.", "학교는 자본주의 시장이 그 순간 요구하는 특정 직무의 노동 부품을 찍어내는 공장이 아니라, 모든 학생이 지능 지수(IQ)에 얽매이지 않고 각자 타고난 다양한 잠재력과 덕성을 최대한 발전시킬 수 있도록 지지하는 공간이어야 한다.", "공부 못하는 아이들은 즉시 퇴학시켜 일찌감치 공장으로 보내는 것이 국가 경쟁력에 이득이다.", "모든 학생을 강제로 의대에 진학하도록 지도해야 한다."],
+    "a": 1,
+    "h": "교재 요약: 탁월성은 다양한 삶의 영역에서 각자의 방식으로 발현되는 아름다움입니다.",
+    "e": "마이클 영은 진정한 기회 균등이란 '계층 사다리를 올라가는 경쟁의 기회'가 아니라, 요리, 수리, 예술, 돌봄 등 모든 인간의 개별적 재능(탁월성)이 우열 없이 존중받고 만개할 수 있는 환경(조건)을 평등하게 제공하는 것이라고 역설했습니다."}
+        // 
+    ];
+
+    let curIdx = 0;
+    let wrongCount = 0; // 틀린 횟수 추적 변수
+
+    function loadQuestion() {
+        wrongCount = 0;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    function checkAnswer(idx, btn) {
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+        
+        if (idx === q.a) {
+            // 정답을 맞춘 경우
+            btn.classList.add('correct');
+            allBtns.forEach(b => b.style.pointerEvents = 'none'); // 클릭 방지
+            showExplanation();
+        } else {
+            // 틀린 경우
+            wrongCount++;
+            btn.classList.add('wrong');
+            btn.style.pointerEvents = 'none'; // 틀린 버튼 다시 못 누르게
+            
+            if (wrongCount === 1) {
+                // 첫 번째 틀림: 힌트만 보여줌
+                document.getElementById('hint-text').innerText = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                // 두 번째 틀림: 정답 공개
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                showExplanation();
+            }
+        }
+    }
+
+    function showExplanation() {
+        const q = quizData[curIdx];
+        document.getElementById('exp-text').innerText = q.e;
+        document.getElementById('exp-box').style.display = 'block';
+        document.getElementById('next-btn').style.display = 'block';
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            document.getElementById('quiz-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'block';
+            document.getElementById('result-msg').innerText = "6강 학습을 완료하셨습니다. 수고하셨습니다, 학우님!";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>

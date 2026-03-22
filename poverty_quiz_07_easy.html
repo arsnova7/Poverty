@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>빈곤론 퀴즈 [7강 - 초급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); opacity: 0.6; }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; color: #856404; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제7강: 빈곤, 건강과 주거 (초급)</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>정답 및 해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <p id="result-msg"></p>
+        <button class="option-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="option-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    /* [노트북LM 데이터]
+       형식: {"level": "하", "q": "질문", "o": ["보기1","보기2","보기3","보기4"], "a": 정답번호, "h": "힌트", "e": "해설"}
+    */
+    const quizData = [
+        {"level": "하", "q": "소득 수준과 비만율의 상관관계를 설명한 내용으로 올바른 것은? [교재/강의 녹음]",
+    "o": ["소득이 낮을수록 비만율이 높게 나타난다.", "소득이 높을수록 비만율이 무조건 가장 높다.", "소득과 비만율은 아무런 상관관계가 없다.", "모든 소득 계층의 비만율은 완벽히 동일하다."],
+    "a": 0,
+    "h": "잠시만요 요약본: 과거에는 부유층의 상징이었으나, 현재는 반대 현상이 나타납니다.",
+    "e": "조사 결과, 소득 수준과 교육 수준이 낮을수록 비만율이 높게 나타났으며, 상위 소득층일수록 비만율이 가장 낮게 보고되었습니다."
+  },
+  {
+    "level": "하",
+    "q": "기말고사 후기에 따르면, 소득과 기대수명의 관계에 대해 '틀린 문항'으로 출제된 주장은 무엇인가? [기말고사 후기]",
+    "o": ["최상위 소득 계층이 최하위보다 오래 산다.", "소득이 높을수록 기대수명이 길어진다.", "의료 접근성 차이가 기대수명에 영향을 미친다.", "소득이 높을수록 일찍 죽는다."],
+    "a": 3,
+    "h": "2024년 기말고사 후기: 소득과 생존 기간은 비례하는 경향을 보입니다.",
+    "e": "소득이 높을수록 건강 관리와 양질의 의료 서비스를 받을 수 있어 기대수명이 깁니다. '소득이 높을수록 일찍 죽는다'는 주장은 틀린 설명입니다."
+  },
+  {
+    "level": "하",
+    "q": "기말고사 후기에 언급된 '전반적 빈곤 개념'에 포괄적으로 포함되는 요소가 아닌 것은? [기말고사 후기/교재]",
+    "o": ["건강치 않음 (Unhealthy)", "질병이 많음", "거주 환경이 안전하지 않음", "완벽하게 보장된 참정권과 높은 자존감"],
+    "a": 3,
+    "h": "2024년 기말고사 후기: 빈곤은 단순한 돈의 부족을 넘어 위험하고 질병에 취약한 상태를 포함합니다.",
+    "e": "전반적 빈곤 개념에는 소득 부족뿐 아니라 건강치 않음, 질병 많음, 안전하지 않음, 그리고 주류 사회로부터의 '사회적 배제' 현상 등이 모두 포함됩니다."
+  },
+  {
+    "level": "하",
+    "q": "사람들이 아플 수 있음을 인정하고, 아플 때 필요한 사회적 지원을 받을 수 있도록 보장하는 개념은 무엇인가? [잠시만요 요약본/강의 녹음]",
+    "o": ["노동권", "재산권", "질병권", "자유권"],
+    "a": 2,
+    "h": "잠시만요 요약본: 아픈 신체 상태를 기본값으로 인정하는 권리입니다.",
+    "e": "질병권은 단순히 치료받을 권리를 넘어, 아픈 상태를 사회적으로 인정하고 아픈 몸으로도 생활을 유지할 수 있도록 사회적 책임을 다하여 지원을 보장받을 권리를 의미합니다."
+  },
+  {
+    "level": "하",
+    "q": "주택을 소유하고 있음에도 불구하고, 과도한 대출 상환과 세금 부담 등으로 인해 실질적인 경제적 어려움을 겪는 가구를 무엇이라 하는가? [잠시만요 요약본/강의 녹음]",
+    "o": ["하우스 푸어(House Poor)", "렌트 푸어(Rent Poor)", "쪽방촌 거주민", "프레카리아트(Precariat)"],
+    "a": 0,
+    "h": "잠시만요 요약본: 이른바 '영끌족'과 연관되는, 집을 보유한 가난한 사람입니다.",
+    "e": "하우스 푸어는 번듯한 집을 소유하고 있으나 무리한 주택 담보 대출의 원리금 상환 부담 등에 짓눌려 실질 소득이 줄어들어 빈곤하게 사는 가구를 뜻합니다."
+  },
+  {
+    "level": "하",
+    "q": "급증하는 전셋값이나 월세를 감당하느라 소득의 대부분을 지출하여 여유 없이 사는 사람을 일컫는 용어는? [잠시만요 요약본/강의 녹음]",
+    "o": ["나사로형 빈민", "렌트 푸어(Rent Poor)", "하우스 푸어(House Poor)", "노숙인"],
+    "a": 1,
+    "h": "잠시만요 요약본: 세입자로서 높은 주거비 부담에 시달리는 계층입니다.",
+    "e": "렌트 푸어(Rent Poor)는 전세 가격 상승이나 반전세·월세의 전환으로 인해 소득은 그대로인데 주거비 지출이 급증하여 빈곤해진 가구를 의미합니다."
+  },
+  {
+    "level": "하",
+    "q": "세계보건기구(WHO)가 제시한 '건강 결정 요인'에 해당하지 않는 것은? [잠시만요 요약본/교재]",
+    "o": ["수입과 사회적 신분", "교육 및 물리적 환경", "주식 시장의 일일 변동성", "사회적 지지망과 개인의 행동 대처 수단"],
+    "a": 2,
+    "h": "잠시만요 요약본: 개인의 삶을 둘러싼 거시적·미시적 환경 요인들입니다.",
+    "e": "WHO의 건강 결정 요인에는 유전적 특질, 수입, 교육, 물리적 환경, 건강 서비스, 고용 조건, 성별, 사회적 지지망, 문화 등이 포함되며 주식 시장의 일일 변동성은 직접적 요인이 아닙니다."
+  },
+  {
+    "level": "하",
+    "q": "질병을 바라보는 관점 중 '의료적 모델'에 대한 설명으로 올바른 것은? [강의 녹음/교재]",
+    "o": ["질병의 원인을 주거비 등 사회 구조에서 찾는다.", "아픈 신체 상태를 기본값으로 인정한다.", "건강한 몸을 기준으로 비정상적 상태를 교정하고 정상화하려 시도한다.", "질병권을 가장 적극적으로 보장하는 모델이다."],
+    "a": 2,
+    "h": "교재 요약: 정상적인 건강 상태를 기준으로 개인의 상태를 고치려 하는 접근입니다.",
+    "e": "의료적 모델은 건강 문제를 개인의 노력 부족이나 손상으로 파악하고, 표준화된 건강한 신체로 되돌리는(정상화) 데 초점을 맞춥니다. 질병권은 사회적 모델의 관점입니다."
+  },
+  {
+    "level": "하",
+    "q": "주거를 바라보는 두 가지 관점 중, 주거를 '상품'으로 간주할 때 발생하는 전형적인 결과는 무엇인가? [잠시만요 요약본/강의 녹음]",
+    "o": ["시장의 논리에 의해 주거지 가격이 결정되어 저소득층은 주거 마련이 매우 어려워진다.", "국가가 모든 시민에게 무상으로 주택을 평등하게 분배한다.", "모든 시민이 공공임대주택에서만 생활하게 된다.", "하우스 푸어나 렌트 푸어 문제가 완전히 소멸한다."],
+    "a": 0,
+    "h": "잠시만요 요약본: 시장 경제의 이윤 원리에 맡길 때 나타나는 현상입니다.",
+    "e": "주거를 투자와 이윤 창출을 위한 '상품'으로 간주하면, 구매력(지불 능력)에 따라 주거 환경이 결정되므로 빈곤층은 시장에서 배제되어 부적절한 주거지로 밀려나게 됩니다."
+  },
+  {
+    "level": "하",
+    "q": "도시 노숙인 등 한계 계층이 주로 거주하며, 역이나 인력시장 인근에 형성된 소규모 방을 뜻하는 주거 형태는? [잠시만요 요약본/강의 녹음]",
+    "o": ["고급 펜트하우스", "전원주택", "쪽방", "타운하우스"],
+    "a": 2,
+    "h": "잠시만요 요약본: 1960~70년대 형성된 대표적인 취약 주거지입니다.",
+    "e": "쪽방은 일용직 노동자나 노숙인들이 임시 일자리를 구하기 쉬운 도심의 역, 인력시장 인근에 여관이나 큰 방을 잘게 쪼개어 만든 열악하고 좁은 주거 공간을 말합니다."
+  },
+  {
+    "level": "하",
+    "q": "1960년대 한국 사회에서 '반지하'라는 독특한 주거 형태가 최초로 등장하게 된 직접적인 계기는 무엇인가? [강의 녹음/교재]",
+    "o": ["국민들의 건강 증진을 위한 헬스장 의무 설치법 제정", "전쟁을 대비하여 집집마다 '방공호'를 만들라는 박정희 정권의 지시", "여름철 더위를 피하기 위한 친환경 건축 바람", "고소득층의 프라이버시 보호 열풍"],
+    "a": 1,
+    "h": "강의 녹음: 원래 사람이 살기 위해 만든 공간이 아니었습니다.",
+    "e": "반지하는 1970년대 남북 대치 상황 속에서 건물 신축 시 지하 방공호 설치를 의무화한 조치에서 유래했으며, 이후 주택난이 심화되면서 집주인들이 이 공간을 거주용으로 불법/합법 임대하며 확산되었습니다."
+  },
+  {
+    "level": "하",
+    "q": "신자유주의와 사회민주주의가 건강을 바라보는 철학적 시각의 차이를 바르게 설명한 것은? [교재/강의 녹음]",
+    "o": ["신자유주의는 건강을 '상품'으로, 사회민주주의는 건강을 시민의 '권리'로 본다.", "신자유주의는 국가 주도의 무상의료를 최우선으로 한다.", "사회민주주의는 돈이 있는 사람만 치료받아야 한다고 본다.", "두 이념 모두 건강은 오직 개인의 몫이라고 주장한다."],
+    "a": 0,
+    "h": "교재 요약표: 상품(구매능력) vs 권리(필요)의 차이입니다.",
+    "e": "신자유주의는 의료와 건강을 시장에서 구매할 수 있는 '상품(개인 관리)'으로 파악하지만, 사민주의는 베버리지의 이념처럼 누구나 누려야 할 인간의 기본적 '권리(사회 관리)'로 규정합니다."
+  },
+  {
+    "level": "하",
+    "q": "여성 비만율이 소득과 교육 수준에 따라 뚜렷한 격차를 보이는 이유로, 사회문화적 압력과 밀접하게 연관된 현대 사회의 현상은 무엇인가? [강의 녹음/교재]",
+    "o": ["여성이 남성보다 타고난 기초 대사량이 10배 높기 때문이다.", "여성에게 날씬한 몸매가 이상화되고 이를 상품화하는 강한 문화적·사회적 압력이 작용하기 때문이다.", "저소득층 여성이 무조건 헬스장을 더 많이 다니기 때문이다.", "국가가 고소득층 여성에게만 다이어트 약품을 무료로 제공하기 때문이다."],
+    "a": 1,
+    "h": "교재: 여성의 신체를 미적 잣대로 평가하는 사회적 분위기가 원인입니다.",
+    "e": "여성의 비만율 차이가 남성보다 큰 것은, 날씬함을 요구하는 사회문화적 억압 속에서 경제적·시간적 여유(소득, 학력)가 있는 계층만이 그러한 미적 기준을 달성하기 위한 비용을 지불할 수 있기 때문입니다."
+  },
+  {
+    "level": "하",
+    "q": "주택을 포함한 적합한 생활 수준을 누릴 권리가 모든 인간의 기본 인권임을 명시한 국제 문서는 무엇인가? [강의 녹음/교재]",
+    "o": ["세계인권선언 제25조 제1항", "스핀햄랜드법", "엘리자베스 구빈법", "마그나 카르타"],
+    "a": 0,
+    "h": "교재 말미: 유엔이 선포한 인권의 대원칙입니다.",
+    "e": "「세계인권선언」 제25조 1항은 식량, 의복, '주택'과 의료 등을 포함하여 자신과 가족의 건강에 적합한 생활 수준을 누릴 권리가 있다고 천명하며 주거권을 기본 인권으로 규정했습니다."
+  },
+  {
+    "level": "하",
+    "q": "1980년대 중반, 산동네 해체 이후 갈 곳을 잃은 저소득층이 수도권 그린벨트 등 시내 공한지에 불법으로 조성한 주거 형태는 무엇인가? [교재 표/강의 녹음]",
+    "o": ["고급 빌라촌", "비닐하우스촌", "신라호텔", "주상복합 아파트"],
+    "a": 1,
+    "h": "교재 7-1 표: 농업용 시설을 주거용으로 개조한 임시 촌락입니다.",
+    "e": "비닐하우스촌은 1980년대 중반 도시 빈민들의 산동네(달동네)가 재개발로 헐리면서 쫓겨난 저소득층이 비닐하우스를 거주용으로 개조하거나 신축하여 형성된 부적절한 주거 형태입니다."}
+        // 
+    ];
+
+    let curIdx = 0;
+    let wrongCount = 0; // 틀린 횟수 추적 변수
+
+    function loadQuestion() {
+        wrongCount = 0;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    function checkAnswer(idx, btn) {
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+        
+        if (idx === q.a) {
+            // 정답을 맞춘 경우
+            btn.classList.add('correct');
+            allBtns.forEach(b => b.style.pointerEvents = 'none'); // 클릭 방지
+            showExplanation();
+        } else {
+            // 틀린 경우
+            wrongCount++;
+            btn.classList.add('wrong');
+            btn.style.pointerEvents = 'none'; // 틀린 버튼 다시 못 누르게
+            
+            if (wrongCount === 1) {
+                // 첫 번째 틀림: 힌트만 보여줌
+                document.getElementById('hint-text').innerText = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                // 두 번째 틀림: 정답 공개
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                showExplanation();
+            }
+        }
+    }
+
+    function showExplanation() {
+        const q = quizData[curIdx];
+        document.getElementById('exp-text').innerText = q.e;
+        document.getElementById('exp-box').style.display = 'block';
+        document.getElementById('next-btn').style.display = 'block';
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            document.getElementById('quiz-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'block';
+            document.getElementById('result-msg').innerText = "7강 학습을 완료하셨습니다. 수고하셨습니다, 학우님!";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>빈곤론 퀴즈 [2강 - 초급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); opacity: 0.6; }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; color: #856404; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제2강: 빈곤과 복지의 역사 (초급)</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>정답 및 해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <p id="result-msg"></p>
+        <button class="option-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="option-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    /* [노트북LM 데이터]
+       형식: {"level": "하", "q": "질문", "o": ["보기1","보기2","보기3","보기4"], "a": 정답번호, "h": "힌트", "e": "해설"}
+    */
+    const quizData = [
+        {"level": "하", "q": "중세 초기 기독교 사회에서 빈곤은 어떠한 덕목을 상징하는 긍정적 의미로 해석되었는가? [교재 2장]",
+    "o": ["근면", "겸손", "자립", "평등"],
+    "a": 1,
+    "h": "잠시만요 요약본: 중세시대 빈곤은 운명으로 '이것'과 신의 구원의 의미였습니다.",
+    "e": "중세 초기 기독교 사회에서 빈곤은 예수 그리스도가 인간을 위해 모든 것을 버린 '겸손'의 덕목을 상징하였습니다."
+  },
+  {
+    "level": "하",
+    "q": "12세기 중세시대에 성직자 집단을 대표하며, 주체적이고 자발적으로 빈곤을 선택하여 존경의 대상이 된 빈민 유형은 무엇인가? [잠시만요 요약본]",
+    "o": ["나사로형 빈민", "베드로형 빈민", "부랑형 빈민", "근로형 빈민"],
+    "a": 1,
+    "h": "잠시만요 요약본: 자발적 빈곤을 선택한 유형입니다.",
+    "e": "베드로형 빈민은 세속적인 모든 것을 버리고 신앙을 위해 자발적으로 빈곤을 선택한 소수 엘리트 계층으로, 존경과 찬양의 대상이었습니다."
+  },
+  {
+    "level": "하",
+    "q": "태생적, 환경적 요인으로 인해 비자발적으로 빈곤에 처하여 굴욕적인 처지와 물질적 결핍을 겪는 대다수의 빈민을 지칭하는 용어는? [잠시만요 요약본]",
+    "o": ["나사로형 빈민", "베드로형 빈민", "길버트형 빈민", "스핀햄랜드형 빈민"],
+    "a": 0,
+    "h": "잠시만요 요약본: 비자발적 빈곤에 처한 병든 거지 유형입니다.",
+    "e": "나사로형 빈민은 주체적 선택이 아닌 비자발적으로 가난에 처해 사회적으로 객체화되고 동정과 자선의 대상이 된 빈민입니다."
+  },
+  {
+    "level": "하",
+    "q": "중세시대 대다수 기독교인에게 자선(Charity)은 단순한 시혜를 넘어 어떠한 의미를 지니는 행위로 인식되었는가? [교재 2장]",
+    "o": ["국가의 경제 발전 수단", "신분 상승의 도구", "자신의 죄를 씻는 신의 구원 프로그램", "노동자 계급의 혁명 수단"],
+    "a": 2,
+    "h": "잠시만요 요약본: 빈곤은 운명으로 겸손과 '이것'의 의미였습니다.",
+    "e": "중세시대 자선은 재산의 일부를 희생함으로써 자신의 죄를 사함 받고 천국에 도달할 수 있게 하는 '신의 구원 프로그램'으로 작동했습니다."
+  },
+  {
+    "level": "하",
+    "q": "1601년 영국에서 제정되어 국가가 빈곤층에 대한 책임을 제도적으로 확립하고, 빈민 구제를 공공부조의 틀로 마련한 최초의 법은 무엇인가? [잠시만요 요약본]",
+    "o": ["정주법", "작업장법", "신빈민법", "엘리자베스 빈민법"],
+    "a": 3,
+    "h": "잠시만요 요약본: 일할 수 있는 빈민과 없는 빈민을 구분한 법입니다.",
+    "e": "엘리자베스 빈민법(1601)은 국가가 조세를 통해 빈민 구제의 책임을 지도록 명문화한 근대적 사회복지의 출발점입니다."
+  },
+  {
+    "level": "하",
+    "q": "엘리자베스 빈민법은 노동 능력의 유무에 따라 빈민을 구분하였습니다. 노동 능력이 없는 노인, 질병자, 아동 등을 수용하여 보호한 시설은 어디인가? [교재 2장]",
+    "o": ["작업장(Workhouse)", "구빈원(Almshouse)", "인보관(Settlement House)", "자선조직협회(COS)"],
+    "a": 1,
+    "h": "잠시만요 요약본: 일할 수 없는 빈민을 수용해 구제한 곳입니다.",
+    "e": "엘리자베스 빈민법은 일할 수 없는 빈민(가치 있는 빈민)을 구빈원(Almshouse)에 수용하여 보호 및 원조를 제공하였습니다."
+  },
+  {
+    "level": "하",
+    "q": "엘리자베스 빈민법에서 빈민 구제를 위한 재원을 마련하기 위해 재산 보유자에게 부과한 세금의 명칭은 무엇인가? [교재 2장]",
+    "o": ["부유세", "빈민세(Poor Tax)", "노동세", "인두세"],
+    "a": 1,
+    "h": "잠시만요 요약본: 치안판사와 민생위원이 징수를 관리한 세금입니다.",
+    "e": "영국은 빈민 구제에 필요한 재정을 확보하기 위해 지방의 재산 보유자들에게 빈민세(Poor Tax)를 부과하고 민생위원을 통해 관리하게 했습니다."
+  },
+  {
+    "level": "하",
+    "q": "1662년 영국에서 도시 인구 집중을 막고 빈민이 더 나은 일자리나 구호를 찾아 다른 교구로 자유롭게 이동하는 것을 금지한 법령은? [기출문제 분석]",
+    "o": ["정주법(Settlement Act)", "작업장법(Workhouse Act)", "공장법(Factory Act)", "길버트법(Gilbert's Act)"],
+    "a": 0,
+    "h": "잠시만요 요약본: 부랑인을 연고가 있는 곳으로 되돌려보내는 법입니다.",
+    "e": "정주법(1662)은 농촌 노동력의 유출을 막고 교구의 구호 비용을 절감하기 위해 빈민과 노동자의 거주 이전을 강력히 통제한 법입니다."
+  },
+  {
+    "level": "하",
+    "q": "1722년 제정되어 빈곤층이 구호를 받기 위해서는 반드시 시설에 입소하여 정해진 양의 노동을 수행하도록 강제한 법은 무엇인가? [기출문제 분석]",
+    "o": ["스핀햄랜드법", "신빈민법", "정주법", "작업장 테스트법"],
+    "a": 3,
+    "h": "잠시만요 요약본: 일정 수준 이상의 노동을 수행해야만 구호를 제공했습니다.",
+    "e": "작업장 테스트법(1722)은 빈민에게 노동을 강제하여 구제 대상에서 규율에 복종하는 노동자로 전환시키려는 목적으로 제정되었습니다."
+  },
+  {
+    "level": "하",
+    "q": "1795년 영국의 경제적 위기와 빵 가격 폭등 상황에서, 빵 가격에 비례하여 가족 단위로 임금을 보충해 주는 원외 구호 제도를 무엇이라 하는가? [기출문제 분석]",
+    "o": ["길버트법", "스핀햄랜드법", "공장법", "작업장법"],
+    "a": 1,
+    "h": "잠시만요 요약본: 노동자의 실질 소득을 보전하는 방식의 소득 보조금 제도입니다.",
+    "e": "스핀햄랜드법(1795)은 빵 가격 상승분에 따라 생활비를 기준으로 노동자의 부족한 임금을 보조해 주는 선구적인 수당 제도였습니다."
+  },
+  {
+    "level": "하",
+    "q": "1833년, 9세 미만 아동의 노동을 전면 금지하고 가혹한 노동 환경으로부터 아동을 보호하기 위해 제정된 영국의 법은? [워크북 2장]",
+    "o": ["공장법(Factory Act)", "정주법(Settlement Act)", "도제법", "길버트법"],
+    "a": 0,
+    "h": "잠시만요 요약본: 열악한 산업 환경에서 아동을 보호하기 위한 법입니다.",
+    "e": "공장법(1833)은 굴뚝 청소나 방직 공장 등에서 혹사당하는 아동의 노동 현실을 개선하고자 9세 미만 아동 노동을 법으로 금지하였습니다."
+  },
+  {
+    "level": "하",
+    "q": "1834년 제정되어 원외 구호를 전면 중지하고, 빈민 구호의 수준을 자립 노동자의 최하위 생활 수준보다 낮게 유지하도록 한 법은? [기출문제 분석]",
+    "o": ["엘리자베스 빈민법", "신빈민법(New Poor Law)", "길버트법", "스핀햄랜드법"],
+    "a": 1,
+    "h": "잠시만요 요약본: 구호의 조건을 엄격히 하는 열등처우의 원칙을 적용했습니다.",
+    "e": "신빈민법(1834)은 일할 수 있는 빈곤층에게 원외 구호를 중단하고, 열등 처우의 원칙을 적용하여 작업장 내에서 가혹하게 통제하였습니다."
+  },
+  {
+    "level": "하",
+    "q": "1909년 영국의 빈곤 조사 보고서 중, 빈곤의 원인을 개인의 나태가 아닌 사회·경제적 구조 요인으로 보고 국가의 책임을 강조한 보고서는? [교재 2장]",
+    "o": ["다수파 보고서", "소수파 보고서", "베버리지 보고서", "라운트리 보고서"],
+    "a": 1,
+    "h": "잠시만요 요약본: 무상교육, 가족수당 등 복지국가의 기초를 제안했습니다.",
+    "e": "소수파 보고서는 빈곤을 국가 책임으로 규정하고 무상교육, 최저임금제 등을 제안하여 인보관 운동과 맥을 같이 하였습니다."
+  },
+  {
+    "level": "하",
+    "q": "19세기 후반, 빈곤의 원인을 개인의 게으름과 도덕적 결함으로 보고, 상류층 여성들이 빈민을 방문하여 조사 및 구제를 수행한 조직은? [잠시만요 요약본]",
+    "o": ["자선조직협회(COS)", "인보관 운동", "노동조합", "페비언 협회"],
+    "a": 0,
+    "h": "잠시만요 요약본: 빈곤의 원인을 개인으로 보고 자선을 통한 구제를 주장했습니다.",
+    "e": "자선조직협회(COS)는 개인적 관점에서 빈곤을 해석하고, 우애방문원(Friendly Visitor)을 파견하여 빈민을 개조하고자 하였습니다."
+  },
+  {
+    "level": "하",
+    "q": "빈곤의 원인을 사회구조적 문제로 파악하고, 교육받은 중산층 지식인들이 빈민 지역에 직접 거주하며 제도 개선과 주민 교육을 실천한 운동은? [잠시만요 요약본]",
+    "o": ["자선조직협회(COS)", "인보관 운동(Settlement House Movement)", "루다이트 운동", "차티스트 운동"],
+    "a": 1,
+    "h": "잠시만요 요약본: 사회개량과 기존 제도를 수정해 빈곤 문제 해결을 주장했습니다.",
+    "e": "인보관 운동은 지역사회에 들어가 신뢰와 협동으로 빈민과 연대하며, 사회 개혁과 제도 개선을 통해 빈곤의 근본적 원인을 해결하려 하였습니다."}
+        // 
+    ];
+
+    let curIdx = 0;
+    let wrongCount = 0; // 틀린 횟수 추적 변수
+
+    function loadQuestion() {
+        wrongCount = 0;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    function checkAnswer(idx, btn) {
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+        
+        if (idx === q.a) {
+            // 정답을 맞춘 경우
+            btn.classList.add('correct');
+            allBtns.forEach(b => b.style.pointerEvents = 'none'); // 클릭 방지
+            showExplanation();
+        } else {
+            // 틀린 경우
+            wrongCount++;
+            btn.classList.add('wrong');
+            btn.style.pointerEvents = 'none'; // 틀린 버튼 다시 못 누르게
+            
+            if (wrongCount === 1) {
+                // 첫 번째 틀림: 힌트만 보여줌
+                document.getElementById('hint-text').innerText = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                // 두 번째 틀림: 정답 공개
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                showExplanation();
+            }
+        }
+    }
+
+    function showExplanation() {
+        const q = quizData[curIdx];
+        document.getElementById('exp-text').innerText = q.e;
+        document.getElementById('exp-box').style.display = 'block';
+        document.getElementById('next-btn').style.display = 'block';
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            document.getElementById('quiz-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'block';
+            document.getElementById('result-msg').innerText = "2강 학습을 완료하셨습니다. 수고하셨습니다, 학우님!";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>

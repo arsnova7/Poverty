@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>빈곤론 퀴즈 [3강 - 중급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); opacity: 0.6; }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; color: #856404; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제3강: 빈곤의 관점 (중급)</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>정답 및 해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <p id="result-msg"></p>
+        <button class="option-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="option-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    /* [노트북LM 데이터]
+       형식: {"level": "중", "q": "질문", "o": ["보기1","보기2","보기3","보기4"], "a": 정답번호, "h": "힌트", "e": "해설"}
+    */
+    const quizData = [
+        {"level": "중", "q": "빈곤의 경제적 요인 중, 신용 등 금융 기록이 없는 빈곤층이 제도권 금융에서 밀려나 고금리 대부업 등에 의존하며 악순환에 빠지는 현상을 일컫는 용어는? [워크북 3장]",
+    "o": ["스태그플레이션", "금융 배제(금융 사막)", "사회적 봉쇄", "노동가치 상실"],
+    "a": 1,
+    "h": "잠시만요 요약본: 시장 실패의 한 형태로 금융 접근성이 결여된 상태입니다.",
+    "e": "금융 배제 현상(또는 금융 사막)은 저소득층이 창업이나 위기 대처에 필요한 금융 서비스를 이용하지 못하게 만들어 빈곤 탈출을 지연시키고 구조화합니다."
+  },
+  {
+    "level": "중",
+    "q": "불평등한 교육 격차가 빈곤에 미치는 가장 치명적인 구조적 결과로 알맞은 것은? [워크북 3장]",
+    "o": ["사교육 시장의 폭발적 성장 유도", "경제의 완전고용 달성", "고부가가치 일자리 진입 차단 및 빈곤의 세대 간 대물림", "지역사회 문화 예술의 쇠퇴"],
+    "a": 2,
+    "h": "잠시만요 요약본: 교육은 사회경제적 이동 사다리 역할을 합니다.",
+    "e": "교육 격차는 취약계층이 저임금 산업에 머물게 하고 사회적 이동성을 차단함으로써 장기적으로 빈곤이 세습(대물림)되는 구조를 고착화시킵니다."
+  },
+  {
+    "level": "중",
+    "q": "피케티(T. Piketty)가 지적한 자본주의의 구조적 불평등 심화 원리를 가장 잘 설명한 것은? [교재 3장]",
+    "o": ["노동소득 증가율이 자본수익률을 항상 상회한다.", "자본수익률(r)이 경제성장률 및 노동소득 증가율(g)보다 높아 부가 세습된다.", "복지 국가의 과도한 세금으로 인해 자본가의 이윤이 사라진다.", "자유무역이 확대됨에 따라 전 세계의 부가 완벽히 균등해진다."],
+    "a": 1,
+    "h": "교재 해설: 자본이 돈을 버는 속도가 노동으로 돈을 버는 속도보다 빠릅니다.",
+    "e": "피케티는 자산을 가진 자가 얻는 자본수익률이 노동자가 얻는 노동소득 증가율보다 크기 때문에, 부가 소수에게 집중되어 불평등이 영속화된다고 분석했습니다."
+  },
+  {
+    "level": "중",
+    "q": "존 로크가 사유재산 보호와 자유시장을 역설했던 17세기 영국의 시대적 배경으로 알맞은 것은? [워크북 3장]",
+    "o": ["절대왕정이 극에 달해 왕권신수설이 확립된 시기", "대공황으로 인해 국가 경제가 파탄 난 시기", "명예혁명 이후 입헌군주제가 확립되고 부르주아 상공업자 계급이 성장하던 시기", "노동조합이 결성되어 공산주의 혁명이 주도되던 시기"],
+    "a": 2,
+    "h": "잠시만요 요약본: 왕권이 제한되고 의회 중심의 자유주의가 태동하던 때입니다.",
+    "e": "로크는 1688년 명예혁명 이후 절대왕정의 억압에서 벗어나 신흥 상공업자(부르주아)가 노동과 상업을 통해 축적한 사유재산을 보호해야 할 시대적 요청을 반영했습니다."
+  },
+  {
+    "level": "중",
+    "q": "루소가 『인간 불평등 기원론』에서 문명사회의 창시자이자 파멸의 시작이라고 통렬히 비판한 행위는 무엇인가? [워크북 3장]",
+    "o": ["종교적 타락과 면벌부 판매", "땅에 울타리를 치고 '이것은 내 것'이라며 사유화를 선언한 행위", "화폐의 발명과 상업의 시작", "신대륙 발견을 통한 원주민 노동력 착취"],
+    "a": 1,
+    "h": "잠시만요 요약본: 공공재였던 자연을 개인이 소유하기 시작한 사건을 묘사합니다.",
+    "e": "루소는 인클로저 운동처럼 자연의 공유물을 울타리로 막아 사유화(사유재산 탄생)한 것이 인간의 불평등과 계급, 빈곤을 낳은 파멸의 근원이라고 주장했습니다."
+  },
+  {
+    "level": "중",
+    "q": "아담 스미스가 『도덕 감정론』에서 제시한 개념으로, 개인의 이기심이 타인의 자유를 침해하지 않도록 통제하는 도덕적 기제는 무엇인가? [워크북 3장]",
+    "o": ["공산당의 지도", "국가의 강력한 처벌", "공평한 관찰자(Impartial Spectator)", "절대적 평등주의"],
+    "a": 2,
+    "h": "잠시만요 요약본: 역지사지의 도덕적 감각을 뜻하는 스미스의 개념입니다.",
+    "e": "아담 스미스는 이기심이 공공선으로 이어지기 위해서는 마음속의 '공평한 관찰자'를 통해 타인에게 피해를 주지 않으려는 도덕적 절제가 전제되어야 한다고 보았습니다."
+  },
+  {
+    "level": "중",
+    "q": "1929년 대공황 원인에 대한 케인즈의 진단과 처방으로 올바른 것은? [워크북 3장]",
+    "o": ["정부의 과도한 개입 탓이므로 규제를 전면 철폐해야 한다.", "유효수요(총수요) 부족이 원인이므로 정부가 적극적인 재정 지출로 소비와 투자를 창출해야 한다.", "자본가의 잉여가치 착취가 원인이므로 즉각적인 프롤레타리아 혁명이 필요하다.", "복지병이 원인이므로 실업급여를 즉각 중단해야 한다."],
+    "a": 1,
+    "h": "잠시만요 요약본: 케인즈는 시장이 스스로 수요를 회복할 수 없다고 보았습니다.",
+    "e": "케인즈는 시장의 보이지 않는 손이 작동하지 않는 불황기를 극복하려면, 정부가 개입해 유효수요를 창출하여 완전고용을 달성해야 한다고(수정자본주의) 주장했습니다."
+  },
+  {
+    "level": "중",
+    "q": "마가렛 대처와 로널드 레이건이 주도한 '신자유주의' 정책의 구체적 내용에 해당하지 않는 것은? [워크북 3장]",
+    "o": ["노동시장 유연화 조치 단행", "복지 예산 축소 및 공공부문 민영화", "기업에 대한 감세 및 규제 철폐", "보편적 무상의료 및 대규모 공공 일자리 창출"],
+    "a": 3,
+    "h": "잠시만요 요약본: 신자유주의는 '작은 정부'를 표방합니다.",
+    "e": "보편적 복지와 공공 일자리 창출은 케인즈주의적(수정자본주의) 접근입니다. 신자유주의는 복지를 삭감하고 시장을 시장 자율에 맡기는 정책을 폈습니다."
+  },
+  {
+    "level": "중",
+    "q": "1990년대 영국 토니 블레어 정부가 실업, 범죄, 노숙 증가에 대응하기 위해 채택한 사회적 배제 대응 방식의 특징은 무엇인가? [교재 3장]",
+    "o": ["배제 현상이 심각한 '특정 문제 지역'을 공간적으로 타기팅하여 통합적으로 해결하려 했다.", "사회적 배제국을 폐지하고 모든 권한을 민간 자선단체로 이관했다.", "국가 보조금을 중단하여 빈곤층의 자발적 이주를 유도했다.", "전 국민에게 기본소득을 일괄 지급하여 불평등을 단숨에 해소했다."],
+    "a": 0,
+    "h": "교재 해설: 영국은 빈곤이 집중된 지역(Area-based)을 중심으로 개입했습니다.",
+    "e": "영국은 '사회적 배제국(SEU)'을 설치하고, 슬럼가 등 특정 구역에 빈곤과 범죄가 응집하는 '공간적 배제' 현상에 주목하여 지역 기반의 집중 행정 모델을 도입했습니다."
+  },
+  {
+    "level": "중",
+    "q": "사회주의적 관점이 '사회적 배제'라는 용어의 사용을 근본적으로 비판하는 이유는 무엇인가? [워크북 3장]",
+    "o": ["빈곤층의 나태함을 옹호하는 포퓰리즘 언어이기 때문이다.", "자본주의의 본질적 문제인 '계급 착취와 구조적 불평등'을 교묘하게 은폐하는 이데올로기적 기능을 하기 때문이다.", "배제된 집단에게 너무 많은 복지 권력을 부여하기 때문이다.", "개인의 도덕성 향상에 전혀 도움이 되지 않기 때문이다."],
+    "a": 1,
+    "h": "잠시만요 요약본: 배제라는 말이 근본적인 경제적 모순을 가린다고 보았습니다.",
+    "e": "사회주의는 '배제'라는 개념이 체제 내부의 적응 문제로 치환되어, 자본가의 노동 착취와 계급 불평등이라는 자본주의 본연의 구조적 모순을 가린다고 비판합니다."
+  },
+  {
+    "level": "중",
+    "q": "현대 빈곤의 '국제적 요인'을 설명하는 내용으로 알맞지 않은 것은? [강의록 3강]",
+    "o": ["저개발국의 선진국 경제 종속이 불평등을 심화시킨다.", "세계화 과정에서 불리한 무역 구조가 빈곤을 고착화한다.", "자연재해 및 기후 변화가 복구 능력이 부족한 빈곤국에 더 치명적 타격을 준다.", "다국적 기업의 진출은 언제나 저개발국의 완벽한 경제적 자립을 보장한다."],
+    "a": 3,
+    "h": "강의록 해설: 세계화와 경제 종속은 빈곤을 야기하는 위험 요인으로 작용합니다.",
+    "e": "세계화와 다국적 기업의 침투는 개발도상국을 자원 공급지나 저임금 노동력 하청 기지로 전락시켜 경제 종속과 국제적 불평등을 가속하는 요인으로 지적됩니다."
+  },
+  {
+    "level": "중",
+    "q": "마르크스의 경제 사상 중, 빈곤이 발생하는 기제를 설명하는 핵심 이론은 무엇인가? [강의록 3강]",
+    "o": ["비교우위론", "노동가치설(잉여가치 착취)", "유효수요이론", "낙수효과이론"],
+    "a": 1,
+    "h": "강의록 해설: 생산의 중심은 노동이나 그 이익을 자본가가 가져간다는 이론입니다.",
+    "e": "마르크스는 상품의 가치를 창출하는 것은 노동이지만, 자본가가 정당한 임금을 지불하지 않고 '잉여가치'를 착취하여 부를 축적함으로써 빈곤이 필연적으로 발생한다고 보았습니다."
+  },
+  {
+    "level": "중",
+    "q": "자유주의, 수정자본주의, 사회주의의 빈곤 정책(해결책)을 바르게 짝지은 것은? [워크북 3장]",
+    "o": ["자유주의 - 공공 투자 확대와 사회보장제도 강화", "수정자본주의 - 개인의 역량 개발 및 기업에 대한 감세", "사회주의 - 생산수단의 사회화와 강력한 소득 재분배(부유세)", "자유주의 - 경제 민주화 및 노동자의 경영 참여 의무화"],
+    "a": 2,
+    "h": "잠시만요 요약본: 자본주의의 소유 구조 자체를 변혁하려는 이념입니다.",
+    "e": "자유주의는 감세/규제 완화, 수정자본주의는 재정 정책/복지 확대, 사회주의는 체제 변혁을 통한 생산수단 공공 소유와 강력한 재분배를 해법으로 제시합니다."
+  },
+  {
+    "level": "중",
+    "q": "사회적 배제 현상에서 나타나는 개인적 수준의 부정적 영향에 해당하지 않는 것은? [워크북 3장]",
+    "o": ["자기 정체성 상실과 우울증 등 건강 악화", "교육 기회 박탈 및 실업", "사회적 네트워크가 확대되고 연대감이 극대화됨", "인간관계 단절에 따른 심리적 고립"],
+    "a": 2,
+    "h": "잠시만요 요약본: 배제는 유대와 관계를 해체하는 결과를 낳습니다.",
+    "e": "사회적 배제에 처한 개인은 주류 사회의 네트워크에서 밀려나 철저한 고립을 겪으며, 연대감 확대는 배제 현상과 정반대되는 긍정적 지표입니다."
+  },
+  {
+    "level": "중",
+    "q": "사회적 배제의 원인을 '거시적 요인'과 '개인적 요인'으로 구분할 때, 거시적 요인에 해당하는 것은? [워크북 3장]",
+    "o": ["낮은 학력과 직업 기술 부족", "자본주의 구조 변화 및 분배 정책의 부재", "본인의 불규칙한 생활 습관", "신체적 장애로 인한 거동의 불편"],
+    "a": 1,
+    "h": "잠시만요 요약본: 사회 시스템 차원의 원인입니다.",
+    "e": "자본주의 산업 구조의 개편, 국가 사회보장 제도의 미비 등은 개인이 통제할 수 없는 거시적 요인이며, 학력 부족이나 질병 등은 개인적 위험 요인에 속합니다."}
+        // 
+    ];
+
+    let curIdx = 0;
+    let wrongCount = 0; // 틀린 횟수 추적 변수
+
+    function loadQuestion() {
+        wrongCount = 0;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    function checkAnswer(idx, btn) {
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+        
+        if (idx === q.a) {
+            // 정답을 맞춘 경우
+            btn.classList.add('correct');
+            allBtns.forEach(b => b.style.pointerEvents = 'none'); // 클릭 방지
+            showExplanation();
+        } else {
+            // 틀린 경우
+            wrongCount++;
+            btn.classList.add('wrong');
+            btn.style.pointerEvents = 'none'; // 틀린 버튼 다시 못 누르게
+            
+            if (wrongCount === 1) {
+                // 첫 번째 틀림: 힌트만 보여줌
+                document.getElementById('hint-text').innerText = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                // 두 번째 틀림: 정답 공개
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                showExplanation();
+            }
+        }
+    }
+
+    function showExplanation() {
+        const q = quizData[curIdx];
+        document.getElementById('exp-text').innerText = q.e;
+        document.getElementById('exp-box').style.display = 'block';
+        document.getElementById('next-btn').style.display = 'block';
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            document.getElementById('quiz-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'block';
+            document.getElementById('result-msg').innerText = "3강 학습을 완료하셨습니다. 수고하셨습니다, 학우님!";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>

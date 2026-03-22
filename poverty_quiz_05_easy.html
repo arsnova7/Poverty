@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>빈곤론 퀴즈 [5강 - 초급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); opacity: 0.6; }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; color: #856404; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제5강: 빈곤의 측정 (초급)</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>정답 및 해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <p id="result-msg"></p>
+        <button class="option-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="option-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    /* [노트북LM 데이터]
+       형식: {"level": "하", "q": "질문", "o": ["보기1","보기2","보기3","보기4"], "a": 정답번호, "h": "힌트", "e": "해설"}
+    */
+    const quizData = [
+        {"level": "하", "q": "인간이 생존하는 데 필요한 최소한의 자원을 확보할 수 없는 상태를 기준으로 빈곤을 측정하며, '마켓 바스켓 방식'이 대표적인 이 측정 방식은 무엇인가? [강의 녹음/교재]",
+    "o": ["절대적 빈곤 측정", "상대적 빈곤 측정", "주관적 빈곤 측정", "다차원적 빈곤 측정"],
+    "a": 0,
+    "h": "잠시만요 요약본: 생존 필수품의 가격을 기준으로 빈곤선을 설정하는 대표적 방식입니다.",
+    "e": "절대적 빈곤 측정은 최저생계를 유지하는 데 필요한 구체적 품목(생존 필수품)과 물량을 선정하고 이를 금전 가치로 환산하여 빈곤선을 결정합니다."
+  },
+  {
+    "level": "하",
+    "q": "절대적 빈곤을 측정하는 대표적인 방법인 '마켓 바스켓 방식(장바구니 방식)'은 1923년 어느 국가의 정당에서 기원하였는가? [교재 5장]",
+    "o": ["미국 민주당", "프랑스 사회당", "독일 사민당", "영국 노동당"],
+    "a": 3,
+    "h": "잠시만요 요약본/교재: 근로자가 인간다운 생활을 유지하는 데 필요한 생활물자를 계산하여 임금을 산정하려 했던 영국의 정당입니다.",
+    "e": "마켓 바스켓 방식은 1923년 영국 노동당에서 근로자의 적정 임금(생활 임금) 책정을 위해 생활물자 총량을 계산하며 시작되었습니다."
+  },
+  {
+    "level": "하",
+    "q": "마켓 바스켓 방식 중 인간 생활에 필수적인 '모든 품목'을 선정한 후 최저 소비량과 가격을 곱하여 빈곤선을 산출하는 포괄적인 방식은? [강의 녹음/교재]",
+    "o": ["반물량 방식", "오샨스키 방식", "왓트 방식", "전물량 방식(라운트리 방식)"],
+    "a": 3,
+    "h": "잠시만요 요약본: 생계유지에 필요한 '모든' 품목의 소비 물량을 포함합니다.",
+    "e": "전물량 방식(Full Quantity Approach)은 모든 필수품을 망라하여 계측하므로 의료비, 교육비 등 가구 유형별 부가급여 산정에 유용하나 비용이 많이 듭니다."
+  },
+  {
+    "level": "하",
+    "q": "최저 식료품비를 산출한 후 이를 '엥겔계수'의 역수로 환산하여 전체 최저생계비를 추정하는 축약적인 절대적 빈곤 측정 방식은? [강의 녹음/교재]",
+    "o": ["전물량 방식", "반물량 방식", "라이덴 방식", "주관적 여론조사 방식"],
+    "a": 1,
+    "h": "잠시만요 요약본: 핵심 항목(주로 식료품비)만을 기준으로 계산하는 방식입니다.",
+    "e": "반물량 방식(Semi-Quantity Approach)은 특정 핵심 품목인 최저 식료품비에 엥겔계수의 역수나 특정 계수를 곱하여 전체 생계비를 도출합니다."
+  },
+  {
+    "level": "하",
+    "q": "미국 농림부 소속 공무원의 이름을 딴 것으로, 검소한 식단을 바탕으로 최저 식품비를 계산하고 여기에 3배를 곱하여 빈곤선을 설정하는 반물량 방식의 대표적 사례는? [강의 녹음/교재]",
+    "o": ["오샨스키 방식", "라운트리 방식", "타운센드 방식", "스미스 방식"],
+    "a": 0,
+    "h": "강의 녹음/교재: 미국 농무부의 조사에서 차용한 계수 '3'을 곱하는 방식입니다.",
+    "e": "오샨스키 방식(Orshansky Method)은 반물량 방식의 하나로 최저 식료품비에 일정 계수 3을 곱하여 빈곤선을 산정합니다."
+  },
+  {
+    "level": "하",
+    "q": "특정 사회에서 평균적인 생활 수준과 비교했을 때 경제적 격차를 반영하여 빈곤을 측정하는 방식으로 선진국에서 주로 사용하는 빈곤 개념은? [강의 녹음/잠시만요]",
+    "o": ["절대적 빈곤", "다차원적 빈곤", "상대적 빈곤", "주관적 빈곤"],
+    "a": 2,
+    "h": "잠시만요 요약본: 사회 내 경제적 격차 및 '사회적 배제' 개념과 연결됩니다.",
+    "e": "상대적 빈곤은 사회의 보편적 생활 조건과 비교하여 현저히 뒤처져 사회적 참여에 제약을 받는 상태를 의미합니다."
+  },
+  {
+    "level": "하",
+    "q": "상대적 빈곤선 측정 시 모든 가구를 소득 순서대로 나열했을 때 정중앙에 위치하는 가구의 소득을 의미하는 용어는? [강의 녹음/교재]",
+    "o": ["평균소득", "최저생계비", "중위소득", "가처분소득"],
+    "a": 2,
+    "h": "잠시만요 요약본/교재: 극단적인 초고소득자나 초저소득자의 영향을 덜 받는 지표입니다.",
+    "e": "중위소득(median income)은 소득 분포의 한가운데 위치한 값으로, 극단값에 왜곡되지 않아 상대적 빈곤선 설정에 자주 사용됩니다."
+  },
+  {
+    "level": "하",
+    "q": "상대적 빈곤 측정에서 '평균소득' 기준이 지니는 대표적인 단점은 무엇인가? [강의 녹음/교재]",
+    "o": ["극소수 초고소득층의 소득이 과도하게 높을 경우 분포가 심각하게 왜곡된다.", "빈곤선의 수치가 너무 낮게 나와 빈곤층이 전혀 없는 것처럼 나타난다.", "계산 과정이 너무 복잡하여 통계청에서도 산출이 불가능하다.", "사회 전반적인 경제 성장률을 지나치게 민감하게 반영한다."],
+    "a": 0,
+    "h": "강의 녹음: 소득 분포가 불균형할 경우 왜곡될 가능성이 큽니다.",
+    "e": "평균소득은 초고소득층의 극단값에 크게 영향을 받아 전체 평균을 상향 왜곡시킴으로써, 실제 대다수의 생활 수준을 제대로 대변하지 못할 위험이 있습니다."
+  },
+  {
+    "level": "하",
+    "q": "빈곤을 객관적 지표가 아니라, 개인 스스로가 생각하는 최소한의 생활비나 경제적 상태를 직접 평가하는 방식을 무엇이라 하는가? [강의 녹음/잠시만요]",
+    "o": ["다차원적 빈곤", "객관적 빈곤", "주관적 빈곤(여론조사 방식)", "상대적 빈곤"],
+    "a": 2,
+    "h": "잠시만요 요약본: 여론조사 방식 등을 통해 개인의 경제적 어려움에 대한 인식을 반영합니다.",
+    "e": "주관적 빈곤의 '여론조사 방식'은 개인이 직접 필요 최소 소득을 평가하게 하여 사회 구성원이 체감하는 현실적 빈곤선을 도출합니다."
+  },
+  {
+    "level": "하",
+    "q": "주관적 빈곤 측정 방식 중, 제3자에 대한 주관적 평가를 기반으로 '개인이 판단하는 최소 소득과 실제 소득 간의 관계'를 분석하여 소득 증가에 따른 인식 변화를 척도화하는 방식은? [교재/강의 녹음]",
+    "o": ["오샨스키 방식", "라이덴 방식", "라운트리 방식", "왓트 방식"],
+    "a": 1,
+    "h": "잠시만요 요약본: 타인의 경제적 상황을 평가하거나 소득과 최소 생활비의 상관관계를 봅니다.",
+    "e": "라이덴 방식(Leiden approach)은 소득이 오를수록 필요 최소 생활비도 높게 생각하는 경향을 반영하여 주관적 빈곤선을 설정합니다."
+  },
+  {
+    "level": "하",
+    "q": "유엔개발계획(UNDP)이 개발하였으며 소득뿐만 아니라 교육, 건강, 생활 수준 등 비소득적 결핍을 종합적으로 평가하는 빈곤 지표는? [잠시만요 요약본/강의 녹음]",
+    "o": ["인간빈곤지수(HPI)", "다차원 빈곤지수(MPI)", "울프슨 양극화 지수", "지니계수"],
+    "a": 1,
+    "h": "잠시만요 요약본: 교육, 보건, 생활수준의 3개 차원과 10개 세부 지표로 구성됩니다.",
+    "e": "다차원 빈곤지수(MPI)는 소득 중심의 측정 한계를 극복하기 위해 교육(문맹률), 보건(유아사망률), 생활수준(전기, 식수 등)을 복합적으로 평가합니다."
+  },
+  {
+    "level": "하",
+    "q": "빈곤가구에 속하는 개인의 수를 전체 인구 대비 비율로 측정하여, 빈곤의 정도를 가장 직관적이고 간단하게 보여주는 지표는? [강의 녹음/교재]",
+    "o": ["빈곤갭", "엥겔지수", "빈곤율", "슈바베지수"],
+    "a": 2,
+    "h": "잠시만요 요약본: 사회의 빈곤 수준 규모를 직관적으로 파악할 수 있는 비율 지표입니다.",
+    "e": "빈곤율(Poverty Rate)은 빈곤선 이하 인구를 전체 인구로 나눈 단순 비율로 국가 간 비교에 널리 쓰이지만, 빈곤의 깊이(심도)는 알 수 없습니다."
+  },
+  {
+    "level": "하",
+    "q": "단순 빈곤율의 한계를 보완하기 위해, 빈곤선 이하에 있는 사람들의 소득을 빈곤선 수준까지 끌어올리는 데 필요한 소득 부족분(빈곤선 - 가구 소득)을 측정하는 지표는? [강의 녹음/교재]",
+    "o": ["빈곤갭(Poverty Gap)", "지니계수(Gini Coefficient)", "엥겔계수(Engel's Coefficient)", "분위분배율"],
+    "a": 0,
+    "h": "잠시만요 요약본: 빈곤의 '심도(깊이)'를 정교하게 파악할 수 있는 지표입니다.",
+    "e": "빈곤갭은 빈곤선과 실제 가구 소득의 격차를 모두 합산한 값으로, 빈곤층의 생활 수준이 빈곤선에서 얼마나 깊이 떨어져 있는지를 보여줍니다."
+  },
+  {
+    "level": "하",
+    "q": "가계 소비 지출에서 '식료품비'가 차지하는 비중을 의미하며, 이 수치가 70% 이상일 경우 극빈층으로 분류되는 지표는? [강의 녹음/잠시만요]",
+    "o": ["슈바베 지수", "엥겔계수", "로렌츠 곡선", "에스테반-레이 지수"],
+    "a": 1,
+    "h": "잠시만요 요약본: 이 값이 높을수록 경제적 여유가 부족함을 직관적으로 나타냅니다.",
+    "e": "엥겔계수(Engel's Coefficient)는 가계 지출 중 식비의 비율로, 식비는 필수 지출이므로 저소득층일수록 이 지수가 높게 나타납니다."
+  },
+  {
+    "level": "하",
+    "q": "가구 소득 대비 '주거비 지출 부담' 비중을 나타내며, 저소득층일수록 그 비율이 높게 나타나는 지표는? [강의 녹음/교재]",
+    "o": ["슈바베 지수(Schwaebe index)", "지니계수(Gini coefficient)", "울프슨 지수(Wolfson index)", "인간개발지수(HDI)"],
+    "a": 0,
+    "h": "강의 녹음: 쪽방촌 거주자처럼 이 지수가 과도하게 높으면 빈곤 위험이 매우 큽니다.",
+    "e": "슈바베 지수는 총 가계 지출(또는 소득) 중 주거비(임대료 등)의 비율로, 25% 이상이면 심각한 주거 빈곤층으로 간주됩니다."}
+        // 
+    ];
+
+    let curIdx = 0;
+    let wrongCount = 0; // 틀린 횟수 추적 변수
+
+    function loadQuestion() {
+        wrongCount = 0;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    function checkAnswer(idx, btn) {
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+        
+        if (idx === q.a) {
+            // 정답을 맞춘 경우
+            btn.classList.add('correct');
+            allBtns.forEach(b => b.style.pointerEvents = 'none'); // 클릭 방지
+            showExplanation();
+        } else {
+            // 틀린 경우
+            wrongCount++;
+            btn.classList.add('wrong');
+            btn.style.pointerEvents = 'none'; // 틀린 버튼 다시 못 누르게
+            
+            if (wrongCount === 1) {
+                // 첫 번째 틀림: 힌트만 보여줌
+                document.getElementById('hint-text').innerText = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                // 두 번째 틀림: 정답 공개
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                showExplanation();
+            }
+        }
+    }
+
+    function showExplanation() {
+        const q = quizData[curIdx];
+        document.getElementById('exp-text').innerText = q.e;
+        document.getElementById('exp-box').style.display = 'block';
+        document.getElementById('next-btn').style.display = 'block';
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            document.getElementById('quiz-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'block';
+            document.getElementById('result-msg').innerText = "5강 학습을 완료하셨습니다. 수고하셨습니다, 학우님!";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>

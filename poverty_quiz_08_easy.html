@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>빈곤론 퀴즈 [8강 - 초급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); opacity: 0.6; }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; color: #856404; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제8강: 빈곤정책 1 - 공공부조정책 (초급)</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>정답 및 해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <p id="result-msg"></p>
+        <button class="option-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="option-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    /* [노트북LM 데이터]
+       형식: {"level": "하", "q": "질문", "o": ["보기1","보기2","보기3","보기4"], "a": 정답번호, "h": "힌트", "e": "해설"}
+    */
+    const quizData = [
+        {"level": "하", "q": "국가와 지방자치단체의 책임하에 생활 유지 능력이 없거나 생활이 어려운 국민의 최저생활을 보장하고 자립을 지원하는 사회보장 제도는 무엇인가? [교재/강의 녹음]",
+    "o": ["사회보험", "공공부조", "사회서비스", "민간보험"],
+    "a": 1,
+    "h": "잠시만요 요약본: 생활유지 능력이 없거나 곤란한 국민에게 최저생활을 보장하고 자립을 지원하는 체계입니다.",
+    "e": "공공부조는 생활 유지 능력이 없거나 어려운 국민을 대상으로 국가와 지자체가 조세를 재원으로 최저생활을 보장하고 자립을 돕는 제도입니다."
+  },
+  {
+    "level": "하",
+    "q": "공공부조가 재원을 마련하는 방식과 개별 욕구를 파악하는 기준으로 올바르게 짝지어진 것은? [잠시만요 요약본/교재]",
+    "o": ["조세 - 자산조사", "보험료 - 근로능력", "기부금 - 부양의무", "국채 - 학력조사"],
+    "a": 0,
+    "h": "잠시만요 요약본: 조세를 재원으로 하고, 자산조사를 기반으로 개별 욕구를 파악합니다.",
+    "e": "공공부조는 사회보험과 달리 기여금이 아닌 일반 '조세'로 재원을 충당하며, '자산조사'를 통해 생활 유지 능력이 없는 빈곤층을 선별합니다."
+  },
+  {
+    "level": "하",
+    "q": "공공부조를 지칭하는 유사한 용어가 아닌 것은? [교재 8장]",
+    "o": ["공적부조(public assistance)", "국민부조(national assistance)", "사회부조(social assistance)", "임의보험(voluntary insurance)"],
+    "a": 3,
+    "h": "강의 녹음: 임의보험은 베버리지 보고서에서 사회보장의 다른 축으로 언급되었습니다.",
+    "e": "공공부조는 공적부조, 국민부조, 사회부조, 무기여 소득 보장 프로그램 등으로 불리며 임의보험은 자발적으로 가입하는 민간 보험의 성격입니다."
+  },
+  {
+    "level": "하",
+    "q": "1942년 베버리지 보고서가 제안한 '국민부조'의 전제조건으로 옳지 않은 것은? [교재/강의 녹음]",
+    "o": ["국민부조 급여는 사회보험 급여보다 낮은 수준이어야 한다.", "항상 부조가 필요하다는 증거와 자산조사를 받아야 한다.", "수급자는 소득능력 회복을 위한 적극적 구직활동을 해야 한다.", "사회보험 가입자에게만 국민부조 혜택을 전면 제공해야 한다."],
+    "a": 3,
+    "h": "잠시만요 요약본: 사회보험의 사각지대를 보완하는 기능으로서 국민부조를 제시했습니다.",
+    "e": "국민부조는 사회보험으로 포괄되지 않는 다양한 빈곤 욕구를 충족시키기 위한 제도로, 가입 여부와 무관하게 자산조사를 통해 지급됩니다."
+  },
+  {
+    "level": "하",
+    "q": "유엔(UN)에서 사용하는 '사회부조(Social Assistance)'의 자격 심사 과정에서 반드시 거쳐야 하는 절차는 무엇인가? [강의 녹음/교재]",
+    "o": ["종교 검증", "자산 조사", "근속연수 평가", "보험료 납부 심사"],
+    "a": 1,
+    "h": "잠시만요 요약본: 자산조사는 빈곤층을 규정하고 욕구를 확인하기 위해 필수적입니다.",
+    "e": "UN의 사회부조는 개인의 자력이 부족한 경우 국가 공비로 지급하는 제도로, 자격 심사 시 반드시 엄격한 '자산 조사'를 거치도록 규정하고 있습니다."
+  },
+  {
+    "level": "하",
+    "q": "영국의 제러미 벤담(Jeremy Bentham)이 공공부조에 의존하는 것을 꺼리게 만들기 위해 의도적으로 수급자에게 부여해야 한다고 주장한 것은? [강의 녹음/교재]",
+    "o": ["오명(Stigma)", "특권(Privilege)", "훈장(Medal)", "면세(Tax Exemption)"],
+    "a": 0,
+    "h": "잠시만요 요약본: 잔여적 복지 관점에서 급여를 불쾌한 방식으로 제공하여 원조 요청을 억제하려 했습니다.",
+    "e": "공리주의자 벤담은 원조 신청을 즐겁지 않은 경험으로 만들기 위해 의도적으로 '오명(수치심)'을 부여함으로써 복지 의존을 줄일 수 있다고 보았습니다."
+  },
+  {
+    "level": "하",
+    "q": "공공부조를 잔여적 복지 관점에서 바라볼 때 나타나는 특징적인 정책 방향은 무엇인가? [잠시만요 요약본/강의 녹음]",
+    "o": ["급여를 다소 불쾌한 방식으로 제공하고 신청을 까다롭게 한다.", "모든 국민에게 무조건적으로 기본소득을 지급한다.", "자산조사를 완전히 폐지하여 수치심을 없앤다.", "급여 수준을 시장 임금보다 훨씬 높게 책정한다."],
+    "a": 0,
+    "h": "잠시만요 요약본: 오히려 급여를 불쾌한 방식으로 제공해야 한다는 비판이 있습니다.",
+    "e": "잔여적 관점은 수급자가 의존하지 않고 스스로 자립하도록 유도하기 위해 급여 수준을 매우 낮게 하고 절차를 까다롭고 불쾌하게 설계하는 경향이 있습니다."
+  },
+  {
+    "level": "하",
+    "q": "한국의 「국민기초생활 보장법」에 명시된 급여 종류 중, 출생 영아 1인당 지급되는 급여는 무엇인가? [교재 8장 표]",
+    "o": ["장제급여", "교육급여", "생계급여", "해산급여"],
+    "a": 3,
+    "h": "강의 녹음: 출생 영아에게 지급되는 70만 원의 급여입니다.",
+    "e": "국민기초생활 보장 급여 중 '해산급여'는 출생 영아 1인당 일정액(70만 원)을 지급하여 빈곤 가구의 출산을 지원하는 급여입니다."
+  },
+  {
+    "level": "하",
+    "q": "공공부조의 기본 원칙 중, 국가가 강제적으로 급여를 제공하는 것이 아니라 필요한 사람이 스스로 신청해야만 보호를 시작한다는 원칙은? [강의 녹음/교재]",
+    "o": ["직권 개입의 원칙", "신청 보호의 원칙", "필요 즉응의 원칙", "현물 부조의 원칙"],
+    "a": 1,
+    "h": "교재 8장: 수급자의 자기결정권을 존중하는 것과 관련된 원칙입니다.",
+    "e": "공공부조는 개인의 권리 존중과 행정 편의 등을 위해 필요한 자가 급여를 요청할 때 보호를 개시하는 '신청 보호의 원칙'을 기본으로 합니다."
+  },
+  {
+    "level": "하",
+    "q": "공공부조 제도의 '무기여 제도(non-contributory program)'적 특성이 의미하는 바는 무엇인가? [강의 녹음/교재]",
+    "o": ["수급자가 국가에 어떤 봉사도 기여할 필요가 없다.", "수급자가 국가 정책 수립에 의견을 기여할 수 없다.", "사전에 보험료나 기여금을 납부하지 않아도 소득 수준에 따라 급여를 제공받는다.", "수급자가 민간 자선단체에 기부를 금지당한다."],
+    "a": 2,
+    "h": "잠시만요 요약본: 기여금 납부와 무관하게 최저생활을 보장합니다.",
+    "e": "무기여 소득 보장 제도는 사회보험처럼 사전에 개인이 보험료를 냈는지(기여) 여부와 상관없이, 현재의 빈곤 상태(자산조사)만을 기준으로 국가 조세를 통해 급여를 지급하는 것을 의미합니다."
+  },
+  {
+    "level": "하",
+    "q": "공공부조가 실시하는 '병합 처분'의 올바른 의미는 무엇인가? [강의 녹음/교재]",
+    "o": ["수급자가 잘못을 저지르면 형사 처벌과 벌금을 동시에 내린다.", "소득인정액이 일정 기준 이하일 경우 생계, 의료, 주거, 교육급여 등 여러 급여를 동시에 함께 받을 수 있다.", "모든 국민의 세금을 한 곳으로 병합하여 관리한다.", "국가와 민간 단체가 병합하여 복지 재단을 설립한다."],
+    "a": 1,
+    "h": "강의 녹음: 다양한 급여 혜택을 중복해서 적용받는다는 의미입니다.",
+    "e": "공공부조는 수급자의 개별 욕구에 따라 의료급여, 주거급여, 교육급여 등 다양한 지원을 함께 제공하는 '병합 처분'의 특징을 가집니다."
+  },
+  {
+    "level": "하",
+    "q": "공공부조법의 관련 원리 중, 수급자가 단순히 급여에 의존하는 것을 넘어 구직 활동과 자활을 하도록 지원하는 목표를 담은 원리는? [강의 녹음/교재]",
+    "o": ["자립 성장의 원리", "보충성의 원리", "무차별 평등의 원리", "현금 부조의 원칙"],
+    "a": 0,
+    "h": "잠시만요 요약본: 최저생활 보장뿐 아니라 '이것'을 지원하는 기능이 있습니다.",
+    "e": "자립 성장의 원리는 공공부조가 단순한 생계 구호를 넘어 수급자의 근로 능력을 고취시키고 자활(자립)할 수 있도록 적극적으로 지원해야 함을 의미합니다."
+  },
+  {
+    "level": "하",
+    "q": "현대 공공부조가 과거 엘리자베스 빈민법 시대의 구빈원이나 작업장 입소 강제와 달리, 개인이 자신의 집에서 생활하며 보호받도록 하는 원칙은? [강의 녹음/교재]",
+    "o": ["시설 수용의 원칙", "필요 즉응의 원칙", "거택 보호의 원칙", "세대 단위의 원칙"],
+    "a": 2,
+    "h": "교재 8장: 자신의 거주 공간에서 보호받을 수 있도록 하는 원칙입니다.",
+    "e": "과거 징벌적 시설 수용과 달리, 현대 공공부조는 인권 존중 차원에서 수급자가 자신의 집에서 정상적인 사회생활을 유지하며 급여를 받는 '거택 보호의 원칙'을 따릅니다."
+  },
+  {
+    "level": "하",
+    "q": "공공부조가 복지 제도로서 소득 역전 현상을 방지하기 위해 취하는 정책적 조치는 무엇인가? [강의 녹음/교재]",
+    "o": ["수급자의 소득이 오르면 즉시 구속한다.", "공공부조 급여 수준을 최저임금이나 사회보험 급여 수준보다 낮게 책정하여 지급한다.", "빈곤층에게 상위 10% 수준의 생활비를 현금으로 일시 지급한다.", "수급자가 취업하면 즉시 모든 세금을 면제한다."],
+    "a": 1,
+    "h": "잠시만요 요약본: 정책 설계시 고려 요소로 '소득역전 방지'가 포함됩니다.",
+    "e": "일하지 않고 받는 공공부조 급여가 성실히 노동하여 받는 최저임금보다 높아지는 '소득 역전'을 막기 위해, 공공부조 급여는 사회보장 급여나 최저임금보다 다소 낮게 유지하는 열등 처우의 성격을 띠기도 합니다."
+  },
+  {
+    "level": "하",
+    "q": "국가가 세금을 거두어 저소득층에게 공공부조 급여로 이전함으로써 사회적 불평등을 완화하고 분배 정의를 구현하는 기능을 무엇이라 하는가? [강의 녹음/교재]",
+    "o": ["소득 재분배 기능", "자산 동결 기능", "화폐 발행 기능", "기여금 적립 기능"],
+    "a": 0,
+    "h": "잠시만요 요약본: 조세를 재원으로 하여 배분적 정의를 구현합니다.",
+    "e": "공공부조는 부유층 등 일반 국민이 낸 세금을 재원으로 빈곤층에게 급여를 지급하므로, 부가 이전되는 '소득 재분배' 기능을 강력하게 수행합니다."}
+        // 
+    ];
+
+    let curIdx = 0;
+    let wrongCount = 0; // 틀린 횟수 추적 변수
+
+    function loadQuestion() {
+        wrongCount = 0;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    function checkAnswer(idx, btn) {
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+        
+        if (idx === q.a) {
+            // 정답을 맞춘 경우
+            btn.classList.add('correct');
+            allBtns.forEach(b => b.style.pointerEvents = 'none'); // 클릭 방지
+            showExplanation();
+        } else {
+            // 틀린 경우
+            wrongCount++;
+            btn.classList.add('wrong');
+            btn.style.pointerEvents = 'none'; // 틀린 버튼 다시 못 누르게
+            
+            if (wrongCount === 1) {
+                // 첫 번째 틀림: 힌트만 보여줌
+                document.getElementById('hint-text').innerText = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                // 두 번째 틀림: 정답 공개
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                showExplanation();
+            }
+        }
+    }
+
+    function showExplanation() {
+        const q = quizData[curIdx];
+        document.getElementById('exp-text').innerText = q.e;
+        document.getElementById('exp-box').style.display = 'block';
+        document.getElementById('next-btn').style.display = 'block';
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            document.getElementById('quiz-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'block';
+            document.getElementById('result-msg').innerText = "8강 학습을 완료하셨습니다. 수고하셨습니다, 학우님!";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>

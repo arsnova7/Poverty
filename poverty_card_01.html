@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1강 - 빈곤론 플래시카드</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: 'Pretendard', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; display: flex; flex-direction: column; }
+        
+        /* 1. 컨테이너 너비를 850px로 넓혀서 글자가 옆으로 퍼지게 했습니다 */
+        .container { max-width: 850px; margin: auto; flex: 1; display: flex; flex-direction: column; }
+        
+        .header { text-align: center; color: white; margin-bottom: 30px; }
+        
+        /* 2. 카드 높이를 400px로 키우고, 단어 단위 정렬(keep-all)을 추가했습니다 */
+        .card { 
+            background: white; 
+            border-radius: 20px; 
+            padding: 40px 30px; 
+            margin: 20px 0; 
+            min-height: 400px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            text-align: center; 
+            cursor: pointer; 
+            font-size: 1.25rem; 
+            font-weight: bold; 
+            word-break: keep-all; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2); 
+            transition: transform 0.6s; 
+            transform-style: preserve-3d; 
+            position: relative; 
+        }
+        
+        .card.flipped { transform: rotateY(180deg); }
+        .side { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; padding: 30px; border-radius: 20px; overflow-y: auto; }
+        .back { transform: rotateY(180deg); background: #f8f9fa; color: #5c6ac4; }
+        .controls { display: flex; justify-content: space-between; gap: 10px; }
+        .btn { flex: 1; padding: 15px; border: none; border-radius: 10px; background: white; color: #764ba2; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn:hover { background: #eee; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>제1강 플래시카드</h1>
+            <p><span id="current">1</span> / <span id="total">50</span></p>
+        </div>
+        <div class="card" id="flashcard" onclick="this.classList.toggle('flipped')">
+            <div class="side front" id="question">질문 로딩 중...</div>
+            <div class="side back" id="answer">정답 로딩 중...</div>
+        </div>
+        <div class="controls">
+            <button class="btn" onclick="prevCard()">이전</button>
+            <button class="btn" onclick="nextCard()">다음</button>
+            <button class="btn" onclick="location.href='index.html'">목록으로</button>
+        </div>
+    </div>
+
+    <script>
+        // 주석(//)을 제거하여 데이터를 정상적으로 읽게 수정했습니다.
+        const cards = [
+            {"q": "★★★(중요도) [잠시만요 요약본] 개인과 가족의 삶, 지역사회, 국가에 영향을 미치는 사회적 위험은 무엇인가?", "a": "빈곤"},
+  {"q": "★★★(중요도) [잠시만요 요약본] 기본적인 생존을 위한 자원조차 확보하지 못하는 척박한 상태를 무엇이라 하는가?", "a": "절대적 빈곤"},
+  {"q": "★★★(중요도) [잠시만요 요약본] 타인과 비교했을 때 사회·경제적 자원이나 기회 부족으로 처하게 되는 빈곤은?", "a": "상대적 빈곤"},
+  {"q": "★★★(중요도) [잠시만요 요약본] 근대사회의 빈곤 문제를 해결하기 위해 등장하여 사회적 위험에 공적으로 대응하는 제도는?", "a": "사회복지"},
+  {"q": "★★★(중요도) [잠시만요 요약본] 빈곤을 규정하는 5가지 특성은 무엇인가?", "a": "상대성, 점진성, 다차원성, 지속성, 주관성"},
+  {"q": "★★★(중요도) [교재 1장] 국가가 빈민 문제 해결을 위해 적극 개입한 이정표가 된 1601년의 영국 법은?", "a": "엘리자베스 빈민법(Elizabethan Poor Law)"},
+  {"q": "★★★(중요도) [교재 1장] 1960년대 미국 존슨 대통령이 가난과 인종차별 철폐를 위해 선포한 프로그램은?", "a": "위대한 사회(Great Society)"},
+  {"q": "★★★(중요도) [교재 1장] 경제학자 존 갤브레이스가 사적 풍요와 공적 빈곤의 모순을 지적하며 저술한 책의 제목은?", "a": "풍요한 사회(The Affluent Society)"},
+  {"q": "★★★(중요도) [워크북 1장] 다른 사회 구성원과 비교해 눈에 띄게 열악한 상태를 뜻하며 상대적 비교에 의한 결핍 개념은?", "a": "박탈(deprivation)"},
+  {"q": "★★★(중요도) [워크북 1장] 생존과 직결되는 필수 생활 수준을 유지하는 생물학적 접근 방식의 개념은?", "a": "생계(livelihood)"},
+  {"q": "★★★(중요도) [워크북 1장] 자원이 사실상 완전히 없거나 전무한 상태, '찢어지게 가난함'을 가리키는 개념은?", "a": "궁핍(destitution)"},
+  {"q": "★★☆(중요도) [교재 1장] 시봄 라운트리가 주거 빈민의 상태를 연상시키며 정의한 빈곤의 상태는?", "a": "지속적으로 궁핍하고 불결한 상태"},
+  {"q": "★★★(중요도) [교재 1장] 타운센드가 물질적 결핍을 넘어 빈곤이라 정의할 때 부족하다고 본 3가지 확장의 영역은?", "a": "식품, 위락 시설, 서비스 및 활동"},
+  {"q": "★★☆(중요도) [교재 1장] 미국 사회복지사협회(NASW)가 규정한 빈곤은 금전이나 '무엇'이 부족한 상태인가?", "a": "생계 수단"},
+  {"q": "★★☆(중요도) [교재 1장] 한국사회복지협의회는 기본 수요 부족으로 생활필수품이 결핍될 때, 이것이 어떠한 불안감을 가져온다고 보았는가?", "a": "육체적·정신적 불안감"},
+  {"q": "★★★(중요도) [교재 1장] 기아와 영양실조, 사회적 차별, 의사결정 참여 제약 등 가장 포괄적 관점에서 빈곤을 정의한 국제기구는?", "a": "UN"},
+  {"q": "★★★(중요도) [교재 1장] 시·공간적 맥락과 발달 수준에 따라 빈곤 여부가 다르게 규정된다는 특성은?", "a": "상대성(relativity)"},
+  {"q": "★★★(중요도) [교재 1장] 빈곤 상태와 비빈곤 상태가 단절되지 않고 층위별로 연속적으로 변화한다는 특성은?", "a": "점진성(graduality)"},
+  {"q": "★★☆(중요도) [교재 1장] 찰스 부스의 빈곤 조사는 빈곤의 5가지 특성 중 무엇을 가장 잘 보여주는 대표적 사례인가?", "a": "점진성"},
+  {"q": "★★★(중요도) [교재 1장] 교육, 의료, 주거 등 생활의 단일 차원이 아닌 다양한 영역에서 빈곤이 복합적으로 발생한다는 특성은?", "a": "다차원성(multidimensionality)"},
+  {"q": "★★★(중요도) [교재 1장] 단기적인 소득 상실 외에도, 구조적으로 영구히 불리한 지위에 놓이게 되는 특성은?", "a": "지속성(persistence)"},
+  {"q": "★★★(중요도) [교재 1장] 빈곤 여부가 객관적 지위나 통계가 아닌 각 개인이 느끼는 심리적·내적 기준에 좌우된다는 특성은?", "a": "주관성(subjectivity)"},
+  {"q": "★★☆(중요도) [교재 1장] \"빈곤은 인간이 인간일 수 없게 하는 가장 잔혹한 거부\"라고 통렬히 비판한 신부의 이름은?", "a": "카밀로 토레스 레스트레포"},
+  {"q": "★★★(중요도) [교재 1장] 모든 인간이 적합한 생활 수준을 누릴 권리가 있음을 천명하여 빈곤 해소를 인권의 영역으로 끌어올린 선언문 조항은?", "a": "세계인권선언 제25조 제1항"},
+  {"q": "★★☆(중요도) [교재 1장] 인권이란 태어날 때부터 하늘로부터 부여된 본질적 권리인 '천부인권'이라 주장한 사상가는?", "a": "존 로크(John Locke)"},
+  {"q": "★★★(중요도) [기출문제 분석] 질병, 장애 등으로 인해 비자발적으로 빈곤에 처하여 동정의 대상이 된 중세 기독교 사회의 빈민층은?", "a": "나사로형 빈민"},
+  {"q": "★★★(중요도) [기출문제 분석] 구호가 무조건 제공되지 않고 반드시 노동을 전제로 지원을 규정한 법적 제재 원칙은?", "a": "작업장 테스트법"},
+  {"q": "★★★(중요도) [기출문제 분석] 노동자의 실질소득을 보전하기 위해 빵 가격과 연동하여 생계 보조금을 지급한 제도는?", "a": "스핀햄랜드법"},
+  {"q": "★★☆(중요도) [기출문제 분석] 신빈민법(1834)에서 일할 수 있는 빈곤층에게 집으로 주는 구호를 축소하고 취한 가혹한 처우 조치는?", "a": "작업장 중심 수용"},
+  {"q": "★★★(중요도) [기출문제 분석] 사유재산제도를 옹호하며 빈곤의 근본 원인을 개인의 노력 부족으로 치부한 고전적 자유주의 사상가는?", "a": "존 로크"},
+  {"q": "★★★(중요도) [기출문제 분석] 빈곤을 개인의 결함이 아닌 사유재산으로 인해 파생된 사회적 불평등 구조의 산물로 파악한 철학자는?", "a": "루소"},
+  {"q": "★★★(중요도) [기출문제 분석] 노동자가 창출한 잉여가치 상실 등 자본주의 체제의 착취 구조에서 빈곤이 필연적으로 발생한다고 본 학자는?", "a": "마르크스"},
+  {"q": "★★☆(중요도) [기출문제 분석] 정부의 소비 촉진을 통한 적극적인 시장 개입, 유효수요 확대, 공공 일자리 창출을 강조한 학자는?", "a": "케인즈"},
+  {"q": "★★★(중요도) [기출문제 분석] MPI(다차원적 빈곤지수)는 단순히 단일 소득만을 측정하지 않고 어떠한 요소들을 포괄하는가?", "a": "교육, 보건, 주거위생 등 다양한 삶의 결핍 요소"},
+  {"q": "★★☆(중요도) [기출문제 분석] 부스와 라운트리의 빈곤 연구가 기존과 달랐던 학문적 접근 방식은?", "a": "과학적 사회조사 방법 및 통계 적용"},
+  {"q": "★★★(중요도) [기출문제 분석] 수입 총액은 빈곤선 이상이나, 비효율적이거나 잘못된 지출 방식으로 인해 사실상 빈곤 상태에 놓이는 계층은?", "a": "2차 빈곤층"},
+  {"q": "★★★(중요도) [기출문제 분석] 생존에 필요한 식료품비 한 항목이 아니라 기초 생필품 모든 품목의 가격을 직접 계산하여 빈곤선을 긋는 방식은?", "a": "전물량방식"},
+  {"q": "★★☆(중요도) [기출문제 분석] 전국의 전체 가구를 소득 순위로 일렬로 세웠을 때, 정확히 정중앙에 위치하는 소득값은?", "a": "중위소득"},
+  {"q": "★★★(중요도) [기출문제 분석] 한 가계의 전체 소비 지출액 중 생계에 가장 필수적인 식료품비 지출액이 차지하는 비중을 나타내는 지수는?", "a": "엥겔지수"},
+  {"q": "★★★(중요도) [기출문제 분석] 정규적인 노동 시장에 참여하여 일을 하고 있음에도 임금이 낮아 여전히 가난을 벗어나지 못하는 계층은?", "a": "워킹푸어(근로빈곤층)"},
+  {"q": "★★☆(중요도) [기출문제 분석] 베버리지가 5대 사회악 중 '무지(ignorance)'를 극복하기 위해 확대가 필수적이라고 본 영역은?", "a": "고등교육 등 교육권 확대"},
+  {"q": "★★★(중요도) [기출문제 분석] 누구나 시험을 볼 권리만 주는 허용적 평등을 넘어, 취약계층이 학교에 실질적으로 다닐 수 있도록 제반 여건을 돕는 평등은?", "a": "보장적 평등"},
+  {"q": "★★☆(중요도) [기출문제 분석] 소득수준이 낮은 계층의 건강 악화가 일으키는 가장 두드러진 부정적 연쇄 결과는?", "a": "노동 능력 상실에 따른 빈곤 고착화"},
+  {"q": "★★★(중요도) [기출문제 분석] 소득의 절반 가까이를 주거비(월세 등)로 지출하여 생계 유지 자체가 구조적으로 위협받는 이들을 칭하는 단어는?", "a": "렌트푸어"},
+  {"q": "★★★(중요도) [기출문제 분석] 개인이 내는 보험료를 재원으로 하는 사회보험과 달리, 국가의 공공부조 제도 운영을 뒷받침하는 핵심 재원은?", "a": "조세"},
+  {"q": "★★★(중요도) [기출문제 분석] 공공부조 대상자를 선별하고 급여의 필요성을 엄격히 가리기 위해 신청자의 소득과 재산을 파악하는 법적 과정은?", "a": "자산조사"},
+  {"q": "★★★(중요도) [기출문제 분석] 일하는 저소득층의 조세 부담을 덜어주고 역으로 지원금을 주어 근로를 유도하고 생계를 돕는 한국의 세제는?", "a": "근로장려세제(EITC)"},
+  {"q": "★★★(중요도) [기출문제 분석] 취약계층 아동이 출발선의 불평등을 겪지 않도록 보건, 복지, 보육을 아울러 맞춤형 통합 서비스를 일찍부터 제공하는 국책 사업은?", "a": "드림스타트(Dream Start)"},
+  {"q": "★★★(중요도) [기출문제 분석] 노년층 등 전체 빈곤 인구의 성별을 나누었을 때 돌봄노동 경력단절 등의 원인으로 여성 빈곤의 비율이 압도적으로 늘어나는 현상은?", "a": "빈곤의 여성화"},
+  {"q": "★★★(중요도) [기출문제 분석] 아마르티아 센(Amartya Sen)이 단순 소득 결여가 아니라 '삶의 질적 목표를 선택하고 달성할 수 있는 자유'가 박탈되었다며 강조한 빈곤 개념의 핵심 용어는?", "a": "역량(capability)"}
+        ];
+
+        let cur = 0;
+        const qEl = document.getElementById('question');
+        const aEl = document.getElementById('answer');
+        const curEl = document.getElementById('current');
+        const totEl = document.getElementById('total');
+
+        function updateCard() {
+            qEl.textContent = cards[cur].q;
+            aEl.textContent = cards[cur].a;
+            curEl.textContent = cur + 1;
+            totEl.textContent = cards.length;
+            document.getElementById('flashcard').classList.remove('flipped');
+        }
+
+        function nextCard() { cur = (cur + 1) % cards.length; updateCard(); }
+        function prevCard() { cur = (cur - 1 + cards.length) % cards.length; updateCard(); }
+
+        // 초기 실행
+        updateCard();
+    </script>
+</body>
+</html>

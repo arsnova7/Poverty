@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>빈곤론 퀴즈 [8강 - 상급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); opacity: 0.6; }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; color: #856404; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제8강: 빈곤정책 1 - 공공부조정책 (상급)</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>정답 및 해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <p id="result-msg"></p>
+        <button class="option-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="option-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    /* [노트북LM 데이터]
+       형식: {"level": "상", "q": "질문", "o": ["보기1","보기2","보기3","보기4"], "a": 정답번호, "h": "힌트", "e": "해설"}
+    */
+    const quizData = [
+        {"level": "상", "q": "다음 중 공공부조의 재원으로 보기 어려운 것은? (기출 변형) [기출문제_2025 8강]",
+    "o": ["근로소득세", "지방세", "건강보험료", "국세(부가가치세 등)"],
+    "a": 2,
+    "h": "기출문제 해설: 공공부조는 조세로 운영되며, 개인이 납부한 보험료는 사회보험 재원입니다.",
+    "e": "공공부조는 전 국민이 낸 세금(국세, 지방세 등 일반 조세)으로 빈곤층을 무기여 지원하는 제도입니다. 건강보험료는 기여금 기반의 '사회보험' 재원이므로 공공부조와 다릅니다."
+  },
+  {
+    "level": "상",
+    "q": "다음 중 공공부조를 위한 자산조사(Means Test)의 목적으로 보기 어려운 것은? (기출 변형) [기출문제_2025 8강]",
+    "o": ["수급 대상자의 실제 소득과 재산 규모를 정확히 파악한다.", "국가 지원 급여의 필요성 여부를 결정한다.", "수급자가 향후 부자가 될 수 있도록 재산 형성 투자 계획을 짜준다.", "개인이나 가구의 생활 유지 능력이 결여되었는지 판단한다."],
+    "a": 2,
+    "h": "기출문제 해설: 자산조사는 수급 자격과 빈곤 여부를 판별하기 위한 통제적 절차입니다.",
+    "e": "자산조사는 신청자가 국가 조세로 지원받을 만큼 빈곤한지(재산/소득 기준 미달 여부)를 심사하는 자격 확인용이지, 재테크나 자산 형성 컨설팅을 해주는 기능이 아닙니다."
+  },
+  {
+    "level": "상",
+    "q": "다음 중 공공부조 수급자가 사회적 오명(Stigma)을 덜 느끼거나 느끼지 않을 가능성이 가장 높은 상황은? (기출 변형) [기출문제_2025 8강]",
+    "o": ["공무원이 이웃 주민들을 탐문하며 자산조사를 철저히 하는 경우", "자신이 수급자라는 사실이 동네와 학교에 공개되어 구분되는 경우", "소득 심사 없이 특정 연령의 모든 아동이나 노인에게 수급 대상 여부가 자동으로 결정되어 지급되는 보편적 제도인 경우", "급여 수준이 극히 낮고, 구직 활동 증명서 제출 등 수급 조건이 매우 까다로운 경우"],
+    "a": 2,
+    "h": "기출문제 해설: 보편적 제도처럼 모두가 동일하게 받는 혜택에서는 낙인감이 적습니다.",
+    "e": "아동수당이나 보편적 기초연금처럼 자산 심사 없이 권리로서 일괄 지급되는 보편적 복지 제도에서는 개인이 가난을 증명할 필요가 없어 수치심(오명)이 발생하지 않습니다."
+  },
+  {
+    "level": "상",
+    "q": "다음 중 '수급자'와 '수급권자'의 법적·행정적 차이를 혼동하여 잘못 설명한 것은 무엇인가? (기출 변형) [기출문제_2025 8강]",
+    "o": ["수급자는 현재 법에 따라 실제로 급여를 지급받고 있는 사람을 말한다.", "수급권자는 자산 조건 등을 충족하여 급여를 받을 법적 자격이 있는 사람을 말한다.", "수급자는 자격만 충족했을 뿐 실제로 급여를 받지 않고 있는 사람을 일컫는다.", "수급권자는 자격이 충분하지만 본인이 원치 않아 수급 신청을 하지 않은 상태일 수 있다."],
+    "a": 2,
+    "h": "기출문제 해설: 수급자는 '실제로 받는 사람', 수급권자는 '자격이 있는 사람'입니다.",
+    "e": "국민기초생활 보장법상 '수급권자'는 급여를 받을 수 있는 자격을 가진 자이고, 그가 신청과 조사를 거쳐 실제로 혜택을 받고 있다면 비로소 '수급자'가 됩니다."
+  },
+  {
+    "level": "상",
+    "q": "다음 중 공공부조 제도의 일반적 특징으로 적절하지 않은 설명은? (기출 변형) [기출문제_2025 8강]",
+    "o": ["생활 유지가 어려운 사람에게 세금을 집중 투입하는 선별적 복지이다.", "자산조사와 상태조사를 거쳐 대상자를 엄격하게 가려낸다.", "대한민국 국민이라면 소득과 무관하게 누구에게나 동일한 금액이 지급된다.", "부족한 소득을 채워주는 보충적 소득 보장의 성격을 지닌다."],
+    "a": 2,
+    "h": "기출문제 해설: 공공부조는 전 국민 대상 보편 제도가 아니며 선별적입니다.",
+    "e": "공공부조는 자산조사를 통해 가난이 입증된 특정 빈곤층만을 선별하여 보충적으로 지급하는 제도이므로, 소득과 무관하게 똑같이 지급되는 것은 보편적 복지(예: 기본소득)의 특징입니다."
+  },
+  {
+    "level": "상",
+    "q": "빈곤사회연대 정성철 국장과의 인터뷰 내용 중, 기초생활보장제도의 생계급여 지급액을 결정하는 '기준 중위소득'이 통계청의 실제 중위소득(중앙값)보다 현저히 낮게 책정되어 빈곤층이 피해를 보는 근본적 원인은 무엇인가? [강의 녹음 심화]",
+    "o": ["통계청의 컴퓨터가 잦은 오류를 일으켜 잘못된 수치를 제공하기 때문이다.", "중앙생활보장위원회의 결정 논의 구조가 매우 폐쇄적이어서 빈곤 당사자와 시민사회가 의견을 개진하고 감시할 통로가 원천 차단되어 있기 때문이다.", "수급자들이 돈을 더 많이 주면 무조건 도박에 탕진할 것이라는 연구 결과가 입증되었기 때문이다.", "국가에 예산이 차고 넘쳐서 돈을 쓸 곳이 없기 때문이다."],
+    "a": 1,
+    "h": "강의 녹음 인터뷰: 결정 과정이 폐쇄적이고 당사자 목소리가 배제되는 힘의 불균형 문제입니다.",
+    "e": "정 국장은 매년 기준 중위소득이 실제값과 격차를 보이는 이유가 회의록조차 비공개로 부치는 '중앙생활보장위원회'의 폐쇄적이고 일방적인 의사결정 구조와 사회적 무관심(권력의 비대칭) 탓이라고 비판합니다."
+  },
+  {
+    "level": "상",
+    "q": "현 정부가 의료급여 수급자의 본인부담금 체계를 기존 '정액제(1~2천 원)'에서 '정률제(진료비의 4~8%)'로 개편하려 시도하는 것에 대해, 빈곤 단체가 '아파 죽을지 굶어 죽을지 선택하라는 계약'이라며 강력히 비판하는 핵심 이유는? [강의 녹음 심화]",
+    "o": ["본인부담액이 진료비 총액에 비례해 수시로 변하므로 예측 불가능성이 커져, 만성질환이나 비급여 치료가 잦은 수급자들이 비용 공포로 인해 필수적인 병원 이용조차 포기하게 만들기 때문이다.", "의료급여 수급자들은 원래 돈이 매우 많아 정액제를 오히려 귀찮아하기 때문이다.", "정률제가 도입되면 수급자들이 병원비를 아예 한 푼도 안 내게 되어 대형병원이 파산하기 때문이다.", "정률제가 세계보건기구(WHO)의 금지 사항이기 때문이다."],
+    "a": 0,
+    "h": "강의 녹음 인터뷰: 예측 불가능한 의료비 증가는 수급자의 의료 접근성을 심각하게 위협합니다.",
+    "e": "정률제는 수술이나 고가의 비급여 치료 시 본인부담금이 기하급수적으로 늘어날 수 있어, 주머니 사정이 빠듯한 빈곤층이 비용을 가늠하지 못해 아예 병원 문턱을 넘지 못하게 만드는 의료 사각지대를 초래합니다."
+  },
+  {
+    "level": "상",
+    "q": "2010년대 이후 빈곤 단체의 장기 농성(광화문 1,842일) 등 사회적 압력으로 '부양의무자 기준'이 점진적으로 완화 및 폐지되었으나, 2025년 현재까지도 이 독소 조항이 여전히 남아있어 가장 많은 사각지대를 양산하고 있는 급여 영역은 무엇인가? [강의 녹음 심화]",
+    "o": ["주거급여와 교육급여", "해산급여와 장제급여", "생계급여와 의료급여", "자활급여와 실업급여"],
+    "a": 2,
+    "h": "강의 녹음 인터뷰: 문재인 정부 때 주거급여는 폐지되었으나 두 급여는 남아있습니다.",
+    "e": "주거급여와 교육급여는 부양의무자 기준이 폐지되었으나, 가장 막대한 예산이 소요되고 생존과 직결된 핵심인 '생계급여'와 '의료급여'에는 여전히 부양의무자 기준(소득/재산 컷오프)이 잔존하여 약 66만 명의 사각지대를 방치하고 있습니다."
+  },
+  {
+    "level": "상",
+    "q": "복지를 노동시장으로부터의 독립, 즉 '탈상품화(De-commodification)'로 정의하는 에스핑 앤더슨(Esping-Andersen) 등의 복지국가 이념에 비추어 볼 때, 현대의 '근로 연계 복지(Workfare)'가 직면한 모순을 가장 타당하게 비판한 것은? [교재/강의 녹음 심화]",
+    "o": ["복지는 원래 가난한 자들을 공장으로 내몰기 위한 채찍질이어야 하므로 근로 연계 복지는 탈상품화의 완벽한 실현이다.", "진정한 복지란 개인이 시장에 노동력을 팔지(상품화) 않고도 인간다운 삶을 누리는 것인데, 공공부조 수급을 조건으로 억지 노동을 강제하는 것은 빈곤층의 생존권을 빌미로 이들을 노동시장에 강제 편입시키는 '재상품화(Re-commodification)'이자 폭력이다.", "탈상품화는 시장에서 물건을 사지 못하게 막는 것이므로 근로 연계 복지와 아무런 충돌이 없다.", "근로 연계 복지는 취약계층에게 연봉 1억 이상의 대기업 일자리만을 보장하므로 너무 과도한 특혜이다."],
+    "a": 1,
+    "h": "강의 녹음 심화: 근로 연계 복지는 노동의 강제성을 지니며 재상품화로 비판받습니다.",
+    "e": "탈상품화 이념은 아프거나 늙었을 때 일하지 않고도 국가가 생계를 책임지는 권리를 뜻합니다. 반면, 복지 수급 조건으로 구직을 강제하는 Workfare는 빈민을 다시 자본주의의 저임금 노동 기계로 전락시키는 역행(재상품화)이라는 비판을 받습니다."
+  },
+  {
+    "level": "상",
+    "q": "베버리지(Beveridge)는 1942년 보고서를 통해 사회보험이 정착되면 공공부조(국민부조)의 역할이 자연히 소멸할 것이라 예측했으나 역사적으로 이 예측은 빗나갔다. 그 사회구조적 원인으로 가장 타당한 것은? [교재 심화]",
+    "o": ["영국 국민 전원이 갑자기 일제히 일을 그만두었기 때문이다.", "베버리지가 보고서를 작성하자마자 법적 효력을 상실했기 때문이다.", "전 세계가 공산주의로 통일되어 화폐가 사라졌기 때문이다.", "비정규직, 장기 실업, 경력단절 등 노동시장의 불안정성으로 인해 사회보험에 아예 가입하지 못하거나 납부 기간을 채우지 못해 보호망 밖으로 밀려나는 '사각지대' 인구가 대거 양산되었기 때문이다."],
+    "a": 3,
+    "h": "교재 요약: 사회보험 적용을 받지 못하는 인구가 많아 국민부조가 오히려 증가했습니다.",
+    "e": "사회보험은 '정규직의 안정된 기여금 납부'를 전제로 설계되었으나, 자본주의의 고용 유연화로 비정규직, 특수고용직이 폭증하면서 보험의 보호를 받지 못해 최후의 보루인 공공부조(세금 구호)에 기대는 극빈층이 오히려 늘어났습니다."
+  },
+  {
+    "level": "상",
+    "q": "영화 「나, 다니엘 블레이크」에서 다니엘이 관공서 벽에 적은 \"나는 의뢰인도 고객도, 짐승도 아닙니다. 시민입니다\"라는 외침이, 현대 관료주의적 공공부조 행정에 던지는 비판적 메시지의 본질은 무엇인가? [강의록 심화]",
+    "o": ["공공부조 수급자는 국가가 베푸는 시혜를 받는 의뢰인이자 관리·통제되어야 할 비용 요소가 아니라, 헌법과 민주주의 체제 아래 마땅히 인간다운 생존권을 요구할 주권적 권리를 지닌 동등한 '시민'임을 천명한 것이다.", "복지 국가를 축소하기 위해 자신 스스로 복지 수급을 영구히 거부하겠다는 결연한 의지이다.", "자신을 병원의 VIP 고객으로 우대해주지 않는 행정 서비스의 불친절함에 대한 불만 토로이다.", "자신이 세금을 내지 않았으니 수당을 받을 자격이 없음을 고백하는 자기 반성이다."],
+    "a": 0,
+    "h": "강의록 심화: 빅 소사이어티가 시민을 통제와 억압의 대상으로 전락시킨 것을 고발합니다.",
+    "e": "다니엘의 유언은 복지 제도가 수급자를 자산조사와 근로 감시로 옥죄며 '잠재적 범죄자나 사기꾼' 취급하는 것을 거부하고, 생존권 보장이 민주국가 시민의 당연하고도 엄숙한 권리임을 호소하는 인권 선언입니다."
+  },
+  {
+    "level": "상",
+    "q": "2010년대 영국 캐머런 정부의 '빅 소사이어티(Big Society)' 정책 시행 당시, 국가 복지 예산 감축이 빈곤에 미친 악영향을 유니세프(UNICEF) 보고서가 어떻게 평가했는가? [강의 녹음 심화]",
+    "o": ["국가의 개입이 사라지자 지역 자선단체의 엄청난 활약으로 영국 내 아동 빈곤이 0%로 완전히 소멸했다.", "비슷한 경제 위기를 겪은 다른 선진국들은 아동 빈곤이 완화되었으나, 영국은 정부의 긴축 정책(급여 상한제 및 삭감)의 여파로 나홀로 아동 빈곤이 선명하게 악화되는 역주행을 보였다.", "복지 예산을 줄였더니 부모들이 일을 두 배로 많이 하여 영국의 가구 소득이 급증했다.", "영국 아동들의 교육열이 상승하여 학업 성취도가 세계 1위를 기록했다."],
+    "a": 1,
+    "h": "강의 녹음 지문: 연정 정부의 긴축정책으로 타국과 달리 영국만 빈곤이 악화되었습니다.",
+    "e": "민간의 자발적 돌봄을 핑계로 국가 예산을 30% 감축하고 수당 상한제(Benefit Cap)를 도입한 빅 소사이어티 정책은, 촘촘한 안전망을 파괴하여 영국 사회에 아동 빈곤 폭증이라는 참혹한 부메랑(Broken Society)으로 되돌아왔음을 유니세프가 실증적으로 비판했습니다."
+  },
+  {
+    "level": "상",
+    "q": "공공부조의 구조적 쟁점 중 '빈곤의 함정'을 발생시키는 수급자들의 행동 양식(근로 기피)을 '학습된 무기력'으로 해석할 때 도출되는 사회정책적 진단으로 알맞은 것은? [교재/워크북 심화]",
+    "o": ["이는 순전히 가난한 이들의 유전적인 나태함 때문이므로, 당장 급여를 모두 삭감하여 굶주림으로 정신을 차리게 해야 한다.", "저임금, 열악한 노동 환경, 경력 단절 등 외부의 구조적 벽에 부딪혀 번번이 좌절한 경험이 누적된 결과이므로, 개인을 비난할 것이 아니라 양질의 일자리 창출과 노동시장 보완 등 국가의 긍정적 지지가 필요하다.", "복지 혜택이 너무 완벽하여 천국과 같으므로 아무도 벗어나고 싶어 하지 않는 즐거운 현상이다.", "이들은 태어날 때부터 일을 한 번도 해본 적이 없는 사람들이다."],
+    "a": 1,
+    "h": "교재 심화: 구조적 문제로 보아 노동시장 소득 부족이 원인임을 인지하는 것입니다.",
+    "e": "도덕적 해이가 수급자를 이기적이고 게으른 존재로 탓하는 시각이라면, 학습된 무기력은 일해도 가난을 벗어날 수 없는 노동시장의 모순과 사회적 장벽이 그들의 의지를 꺾었음을 인정하고 포용적 대안을 모색하려는 진단입니다."
+  },
+  {
+    "level": "상",
+    "q": "절대적 빈곤선 산정을 위한 '마켓 바스켓 방식(전물량 방식)'이 이론적으로 완벽해 보임에도 불구하고 현실 정책에서 치명적인 쟁점을 안고 있는 이유는 무엇인가? [교재 심화]",
+    "o": ["장바구니에 담을 물건의 가격을 계산할 수 있는 컴퓨터 기술이 아직 발명되지 않았기 때문이다.", "영양학적 최저 칼로리는 계산할 수 있을지언정, 현대 사회에서 인간으로서의 '품위'를 지키고 사회에 정상적으로 참여하기 위해 필요한 휴대폰, 교통비, 경조사비 등을 필수품에 넣을지 말지 객관적으로 합의하기가 사실상 불가능하기 때문이다.", "빈곤층은 아무런 소비도 하지 않고 광합성만으로 살 수 있기 때문이다.", "모든 국민의 취향이 똑같아서 장바구니 품목을 정하는 것이 너무 쉽고 지루하기 때문이다."],
+    "a": 1,
+    "h": "교재 요약: 품위 수준에 필요한 품목을 객관적이고 계측 가능하게 결정할 수 있는가의 문제입니다.",
+    "e": "전물량 방식은 쌀 몇 kg, 내복 몇 벌 등 육체적 생존 항목은 계산하기 쉬우나, 문화생활, 정보화 기기 등 상대적 박탈을 막기 위한 사회적 필수재의 범위를 정할 때 전문가의 자의적 가치판단이 개입되어 수많은 논란과 억지를 낳는 한계를 지닙니다."
+  },
+  {
+    "level": "상",
+    "q": "최근 빈곤 단체들이 주장하는 \"가난의 책임을 사적 관계로 떠넘기지 말라\"는 구호와 가장 직접적으로 연관되며, 한국 공공부조 제도의 사각지대를 양산하는 핵심 이데올로기적 제도는 무엇인가? [현장의 소리/기출 융합]",
+    "o": ["국민건강보험 본인부담금 상한제", "가족 부양 의무제", "최저임금제 차등 적용", "국세청의 종합부동산세"],
+    "a": 1,
+    "h": "정성철 국장 인터뷰: 빈곤 문제를 가족의 책임으로 떠넘기는 철학이 담겨있습니다.",
+    "e": "가족 부양 의무제는 생존권 보장의 책임을 국가 공동체가 아닌 개별 가족의 사적 책임으로 축소·전가하는 제도입니다. 이로 인해 가족과 단절되었음에도 서류상 가족의 소득 탓에 수급권을 박탈당하는 비극(송파 세 모녀 등)이 반복되고 있습니다."}
+        // 
+    ];
+
+    let curIdx = 0;
+    let wrongCount = 0; // 틀린 횟수 추적 변수
+
+    function loadQuestion() {
+        wrongCount = 0;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    function checkAnswer(idx, btn) {
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+        
+        if (idx === q.a) {
+            // 정답을 맞춘 경우
+            btn.classList.add('correct');
+            allBtns.forEach(b => b.style.pointerEvents = 'none'); // 클릭 방지
+            showExplanation();
+        } else {
+            // 틀린 경우
+            wrongCount++;
+            btn.classList.add('wrong');
+            btn.style.pointerEvents = 'none'; // 틀린 버튼 다시 못 누르게
+            
+            if (wrongCount === 1) {
+                // 첫 번째 틀림: 힌트만 보여줌
+                document.getElementById('hint-text').innerText = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                // 두 번째 틀림: 정답 공개
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                showExplanation();
+            }
+        }
+    }
+
+    function showExplanation() {
+        const q = quizData[curIdx];
+        document.getElementById('exp-text').innerText = q.e;
+        document.getElementById('exp-box').style.display = 'block';
+        document.getElementById('next-btn').style.display = 'block';
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            document.getElementById('quiz-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'block';
+            document.getElementById('result-msg').innerText = "8강 학습을 완료하셨습니다. 수고하셨습니다, 학우님!";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>

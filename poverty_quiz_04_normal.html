@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>빈곤론 퀴즈 [4강 - 중급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); opacity: 0.6; }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; color: #856404; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제4강: 빈곤선 (중급)</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>정답 및 해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <p id="result-msg"></p>
+        <button class="option-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="option-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    /* [노트북LM 데이터]
+       형식: {"level": "중", "q": "질문", "o": ["보기1","보기2","보기3","보기4"], "a": 정답번호, "h": "힌트", "e": "해설"}
+    */
+    const quizData = [
+        {"level": "중", "q": "맨체스터 학교위원회가 빈곤층 아동의 초등학교 학비를 전액 면제해 주기 위해 설정했던 자체적인 빈곤선 기준은 얼마였는가? [워크북 4장]",
+    "o": ["1인당 임대료 제외 주당 소득 3실링 미만", "주당 소득 18실링 이하", "1인당 주당 소득 21실링 미만", "1파운드 4실링 10펜스 미만"],
+    "a": 0,
+    "h": "워크북 요약: 1885년 맨체스터 지역의 구체적 학비 면제 기준입니다.",
+    "e": "영국 초등교육법 제정 이후 각 지역 학교위원회가 자율적으로 빈곤선을 설정했는데, 맨체스터 학교위원회는 '1인당 임대료를 제외한 주당 소득이 3실링 미만'일 경우를 학비 면제선으로 정했습니다."
+  },
+  {
+    "level": "중",
+    "q": "인보관 운동을 주도한 바넷 부부(Samuel & Henrietta Barnett)의 빈곤선 연구가 지니는 역사적 의의로 옳지 않은 것은? [워크북 4장]",
+    "o": ["빈곤선을 영양학적 필요에 근거한 필수 생활비로 산정하여 과학적 실증성을 제고하였다.", "조사 결과를 바탕으로 토인비 홀을 운영하며 빈민가 환경 개선과 교육 기회 확대를 실천했다.", "이후 찰스 부스와 시봄 라운트리의 빈곤선 산정 방법론에 이론적 토대를 제공했다.", "빈곤의 원인을 개인의 태만과 비도덕성으로 규명하여 열등처우 원칙을 정당화했다."],
+    "a": 3,
+    "h": "워크북 요약: 이들의 연구는 빈곤을 개인의 결함으로 본 기존 시각을 뛰어넘어 구조적, 과학적 분석을 시도했습니다.",
+    "e": "바넷 부부는 식품 소비량 기반 최소 생활비를 산출하여 과학적 빈곤 연구의 초석을 다졌고, 실질적인 빈민 구호(토인비 홀)와 개혁에 앞장섰습니다. 빈곤을 개인의 도덕적 문제로 돌려 열등처우를 옹호한 것은 신빈민법이나 다수파 보고서의 입장입니다."
+  },
+  {
+    "level": "중",
+    "q": "찰스 부스의 빈곤 연구(런던 조사)가 사회복지 정책의 발전에 실질적인 기여를 하여 제정된 영국의 대표적인 사회개혁 입법은 무엇인가? [워크북 4장]",
+    "o": ["신빈민법 제정(1834)", "국민건강서비스(NHS) 전면 시행", "1908년 영국 최초의 공적 연금(노령연금) 제도 도입", "푸드 스탬프 제도 신설"],
+    "a": 2,
+    "h": "워크북 요약: 노동자의 소득 부족과 노년기 빈곤 문제를 입증하여 자유당 개혁의 토대가 되었습니다.",
+    "e": "부스의 연구는 빈곤이 저임금과 노령화에 기인하는 구조적 문제임을 수치로 증명함으로써, 1908년 무기여 공적 연금 도입과 최저임금제, 실업보험 등 복지국가 형성 입법의 과학적 기초를 제공했습니다."
+  },
+  {
+    "level": "중",
+    "q": "찰스 부스와 시봄 라운트리의 빈곤선 측정 방식의 차이점을 가장 올바르게 비교한 것은? [워크북 4장]",
+    "o": ["부스는 경험적 사회조사를 통해 소득 수준으로 단순 구분했고, 라운트리는 영양학적 최소 요구량과 필수 생활비를 종합한 과학적 기준을 적용했다.", "부스는 다차원적 지표를 결합했고, 라운트리는 엥겔지수 하나만으로 빈곤을 측정했다.", "부스는 상대적 빈곤선을 도입했고, 라운트리는 절대적 빈곤선 개념을 완전히 부정했다.", "부스와 라운트리 모두 오직 심리적 주관성 조사에만 의존하여 수치를 도출했다."],
+    "a": 0,
+    "h": "워크북 요약: 부스는 소득 기준 단순 분류, 라운트리는 영양+생계비의 체계적 산출입니다.",
+    "e": "부스가 런던 조사에서 경험적 수치(18~21실링)로 계층을 나눴다면, 라운트리는 요크 조사에서 하루 필수 칼로리와 그에 따른 식비, 의류, 주거, 난방비를 세밀하게 합산하는 더욱 진일보한 과학적 정량 평가(최소 생계비)를 적용했습니다."
+  },
+  {
+    "level": "중",
+    "q": "유엔개발계획(UNDP)의 다차원 빈곤지수(MPI) 평가에서 '보건(Health)' 분야를 측정하기 위해 사용하는 구체적인 지표는 무엇인가? [워크북 연습문제 변형]",
+    "o": ["학교 교육 연수 및 아동 출석 여부", "전기, 식수, 화장실 보급률", "영양 상태 및 유아 사망률", "주거 환경과 난방 연료 유무"],
+    "a": 2,
+    "h": "워크북 요약: 건강 및 생명과 직결된 두 가지 지표를 사용합니다.",
+    "e": "MPI의 10개 지표 중 보건(Health) 차원은 가족 구성원의 '영양 상태(Nutrition)'와 '유아 사망 여부(Child mortality)' 2가지 지표로 결핍을 측정합니다."
+  },
+  {
+    "level": "중",
+    "q": "현대 빈곤선 개념에서 다차원적 빈곤(MPI)의 측정 요소에 포함되지 않는 것은? [워크북 연습문제]",
+    "o": ["교육 수준 및 아동 학교 출석률", "의료 서비스 접근(영양 상태 및 유아사망률)", "정치 참여 및 정당 가입률(투표율)", "생활 수준(전기, 식수, 자산, 화장실 등)"],
+    "a": 2,
+    "h": "워크북 연습문제 해설: MPI의 3개 차원은 교육, 보건, 생활수준입니다.",
+    "e": "다차원적 빈곤(MPI)은 교육(2개), 보건(2개), 생활수준(6개) 등 총 10개의 구체적인 삶의 질 지표를 활용하며, 정치 참여나 투표율은 산정 기준에 포함되지 않습니다."
+  },
+  {
+    "level": "중",
+    "q": "절대적 빈곤과 상대적 빈곤의 차이에 대한 설명으로 올바른 것은? [워크북 연습문제]",
+    "o": ["절대적 빈곤은 개발도상국에는 적용할 수 없고 선진국 전용 지표이다.", "절대적 빈곤은 생존에 필요한 최소 자원을 충족하지 못하는 상태이며, 상대적 빈곤은 사회 평균소득과 비교하여 생활 수준이 현저히 낮은 상태이다.", "상대적 빈곤은 생물학적 기아 상태를 의미하고, 절대적 빈곤은 사회적 배제를 의미한다.", "절대적 빈곤과 상대적 빈곤 모두 통계청의 엥겔지수 한 가지만으로 완벽히 측정된다."],
+    "a": 1,
+    "h": "워크북 연습문제 해설: 절대빈곤은 생존의 문제, 상대빈곤은 사회 격차의 문제입니다.",
+    "e": "절대적 빈곤은 생물학적 생존 유지가 불가능한 최소 자원의 결핍(예: 하루 1.9달러)이며, 상대적 빈곤은 특정 사회의 평균적 생활양식에서 소외될 정도로 격차가 큰 상태(예: 중위소득 50% 미만)를 뜻합니다."
+  },
+  {
+    "level": "중",
+    "q": "세계은행(World Bank)이 2022년에 개정한 절대적 빈곤선 기준에 따르면, '중고소득국(Upper-middle income)'을 대상으로 적용하는 빈곤선 금액은 하루 얼마인가? [워크북 4장]",
+    "o": ["1.9달러", "3.2달러", "5.5달러", "15달러"],
+    "a": 2,
+    "h": "워크북 요약: 저소득국은 1.9, 중저소득국은 3.2, 중고소득국은 이 금액을 적용합니다.",
+    "e": "세계은행은 경제발전 단계를 반영해 절대빈곤선을 차등화하여 저소득국 1.9달러, 중저소득국 3.2달러, 중고소득국 5.5달러 미만을 기준으로 제시하고 있습니다."
+  },
+  {
+    "level": "중",
+    "q": "미국이 연방정부 차원에서 저소득층에게 푸드 스탬프(SNAP), 메디케이드(Medicaid) 등 복지 혜택을 제공할 대상자를 분류하기 위해 사용하는 빈곤선의 명칭은 무엇인가? [워크북 4장]",
+    "o": ["다차원 빈곤지수(MPI)", "유럽연합 상대 빈곤선", "연방 빈곤선(FPL)", "최저임금 연동선"],
+    "a": 2,
+    "h": "워크북 요약: 미국 고유의 행정적 빈곤 측정 지표입니다.",
+    "e": "미국은 최소 식비 산정 방식을 근간으로 하는 절대적 성격의 '연방 빈곤선(Federal Poverty Line, FPL)'을 매년 발표하여 각종 공공부조 급여의 자격 기준으로 사용합니다."
+  },
+  {
+    "level": "중",
+    "q": "유럽연합(EU)이 역내 빈곤을 측정할 때 사용하는 상대적 빈곤선(중위소득 60% 미만)과 함께, 사회 통합의 관점에서 필수적으로 결합하여 고려하는 지표군은 무엇인가? [워크북 4장]",
+    "o": ["주식 및 부동산 투자 수익률", "사회적 배제 지표 (장기실업, 교육 기회 부족, 의료서비스 접근성 등)", "다문화가정 혼인율 지표", "개인주의 성향 및 종교 활동 지표"],
+    "a": 1,
+    "h": "워크북 요약: EU는 빈곤을 단순 소득 부족을 넘어 평등과 통합을 위협하는 요소로 파악합니다.",
+    "e": "유럽연합은 상대적 빈곤선(중위소득 60%)과 더불어 물적 박탈(material deprivation) 및 노동시장 소외(장기 실업 등)를 포괄하는 '사회적 배제' 지표를 핵심으로 관리하고 있습니다."
+  },
+  {
+    "level": "중",
+    "q": "피터 타운센드(P. Townsend)가 현대 사회의 상대적 빈곤 개념을 확립하면서, 단순한 식량 부족을 넘어 빈곤의 가장 핵심적 특성으로 강조한 것은 무엇인가? [워크북 4장]",
+    "o": ["비정규직 노동의 완전한 소멸", "해당 사회의 평균적인 생활양식과 사회 활동(참여)에서의 배제", "국가 재정 고갈과 조세 저항", "종교적 신앙심의 약화"],
+    "a": 1,
+    "h": "워크북 요약: 빈곤은 자원의 부족으로 인해 사회 구성원으로서 당연히 누려야 할 일상에서 제외되는 것입니다.",
+    "e": "타운센드는 빈곤이 절대적 아사 상태가 아니라, 휴가, 이웃과의 교류, 관습적 음식 소비 등 특정 사회에서 당연하게 여기는 평균적 생활 패턴에서 배제(소외)될 만큼 자원이 부족한 상대적 박탈 상태임을 강조했습니다."
+  },
+  {
+    "level": "중",
+    "q": "유엔개발계획(UNDP)의 다차원 빈곤지수(MPI)에서 사용하는 총 10개의 평가 항목 중, 한 가구가 빈곤층으로 분류되기 위해 발생해야 하는 결핍의 최소 항목 기준은 무엇인가? [워크북 4장]",
+    "o": ["1개 이상 항목 결핍", "3개 이상 항목 결핍", "5개 이상 항목 결핍", "10개 항목 모두 결핍"],
+    "a": 1,
+    "h": "워크북 요약: 10개 지표 중 일정 수 이상의 중복 박탈이 일어날 때 다차원적 빈곤으로 규정합니다.",
+    "e": "MPI는 교육, 보건, 생활수준의 총 10개 세부 지표 중 가중치를 고려하여 '3개 이상(또는 전체 가중치의 1/3 이상)' 영역에서 결핍 상태를 보이면 그 가구를 다차원적 빈곤 상태로 판별합니다."
+  },
+  {
+    "level": "중",
+    "q": "현대 빈곤선이 직면한 주요 과제로, 비정규직 및 플랫폼 노동의 확산과 관련하여 발생하는 빈곤 양상은 무엇인가? [워크북 4장]",
+    "o": ["자본수익률의 급격한 하락", "노동시장 구조 변화와 불안정 고용에 따른 소득 불안정과 근로 빈곤(워킹푸어) 확대", "전통적 농업 종사자의 과잉 공급", "유아 사망률의 일시적 폭증"],
+    "a": 1,
+    "h": "워크북 요약: 일은 하지만 고용이 불안정하여 가난한 현상입니다.",
+    "e": "산업구조 재편과 플랫폼 노동 등 비정형 노동의 증가는 고용 안정성을 떨어뜨려, 풀타임으로 일해도 빈곤선을 넘지 못하는 신종 빈곤층(근로빈곤층) 확대를 초래하고 있습니다."
+  },
+  {
+    "level": "중",
+    "q": "현대 빈곤선의 해결 과제 중 하나로, 정보통신 기술에 대한 접근성 및 활용 역량의 차이가 기회 불평등을 야기하고 새로운 형태의 사회적 배제를 낳는 현상은? [워크북 4장]",
+    "o": ["세대 간 자산 세습", "디지털 격차(Digital Divide)", "다차원적 물가 인상", "기후 위기(Climate Crisis)"],
+    "a": 1,
+    "h": "워크북 요약: 인터넷과 모바일 기기 사용 능력에 따른 정보와 소득의 격차입니다.",
+    "e": "디지털 환경이 삶의 필수가 되면서, 스마트기기 접근성이나 활용 능력이 부족한 취약계층이 교육, 취업, 공공서비스에서 배제되어 빈곤이 고착화되는 '디지털 격차'가 핵심 과제로 부상했습니다."
+  },
+  {
+    "level": "중",
+    "q": "찰스 부스(Charles Booth)가 런던 시민을 분류한 기준 중 가장 생활이 열악한 '매우 빈곤층(Very Poor)'의 수입 기준은 무엇인가? [워크북 4장 표4-2]",
+    "o": ["주당 소득 18실링 이하", "주당 소득 18~21실링", "주당 소득 21실링 이상", "하루 1.9달러 미만"],
+    "a": 0,
+    "h": "워크북 요약: 불규칙한 노동과 질병으로 생계유지가 불가능한 최하위층의 기준입니다.",
+    "e": "찰스 부스는 경험적 조사를 통해 주당 18실링 이하를 '매우 빈곤층', 18~21실링을 '빈곤층(Poor)', 21실링 이상을 '빈곤선 이상 계층'으로 구분했습니다."
+  },
+  {
+    "level": "중",
+    "q": "시봄 라운트리가 요크 지역 조사에서 1차 빈곤층의 소득을 산정할 때 반드시 포함시켰던 '필수 생활비'의 항목들에 해당하지 않는 것은? [워크북 4장]",
+    "o": ["최소한의 칼로리를 유지하기 위한 식비", "체온 유지를 위한 의류비와 난방비", "가족의 심리적 휴식을 위한 문화 여가비", "비바람을 막을 최소한의 주거비(임대료)"],
+    "a": 2,
+    "h": "워크북 요약: 라운트리는 '생존'에 필수적인 항목만을 객관적으로 수치화했습니다.",
+    "e": "라운트리의 1차 빈곤선(절대빈곤선)은 영양학적 최소 식비, 임대료, 의류비, 연료비 등 생물학적 생존 유지를 위한 필수 소비 항목만으로 구성되었으며, 문화/여가비는 포함되지 않았습니다."
+  },
+  {
+    "level": "중",
+    "q": "J.K. 갤브레이스(Galbraith)가 빈곤을 절대적 생존 기준이 아니라 현대의 풍요로운 사회 속에서 어떠한 현상으로 새롭게 규정하였는가? [워크북 4장]",
+    "o": ["질병으로 인한 조기 사망의 현상", "사회에서 뒤처지는 상대적 박탈 현상", "종교적 구원을 갈망하는 심리 현상", "국가 생산력이 기하급수적으로 감소하는 현상"],
+    "a": 1,
+    "h": "워크북 요약: 풍요로운 사회 속에서 일부가 대다수의 수준을 따라가지 못하는 현상입니다.",
+    "e": "갤브레이스는 『풍요한 사회』 등을 통해 절대적 궁핍이 사라진 현대 자본주의에서도 사회 평균적 생활수준을 누리지 못하고 뒤처지는 상태 자체가 빈곤(상대적 빈곤)이라고 주장했습니다."
+  },
+  {
+    "level": "중",
+    "q": "빈곤선 설정의 궁극적인 본질에 관하여 교재와 워크북이 가장 강조하는 관점은 무엇인가? [워크북 4장]",
+    "o": ["빈곤선은 한 번 설정되면 영원히 바뀌지 않는 고정불변의 자연법칙이다.", "통계학자들의 복잡한 수학 공식만으로 완벽한 도출이 가능하다.", "시대적 배경, 사회적·경제적 조건 및 사회 구성원들의 정치적 관점이 결합된 사회적 합의의 산물이다.", "종교 기관의 교리에 의해 일방적으로 하달되는 절대적 명령이다."],
+    "a": 2,
+    "h": "워크북 요약: 빈곤선은 사회가 '어디까지를 인간다운 삶으로 볼 것인가'를 결정하는 정치적 산물입니다.",
+    "e": "빈곤선은 기계적 수치가 아니라, 특정 사회가 최저생활의 수준을 어떻게 정의하고 공공 재원을 얼마만큼 배분할 것인지에 대한 사회적 합의와 정치적 가치판단의 결과물입니다."
+  },
+  {
+    "level": "중",
+    "q": "라운트리의 요크 지역 빈곤 조사 결과가 20세기 초 영국의 국가 정책에 직접적인 영향을 미쳐 실현된 역사적 성과는 무엇인가? [워크북 4장]",
+    "o": ["자유당(Liberal Party)의 노동자 연금, 실업보험 등 복지국가 형성 개혁의 과학적 근거 제공", "원외 구호를 폐지하고 작업장 수용을 강제한 신빈민법의 제정", "모든 산업의 국유화를 명시한 사회주의 국가 헌법 선포", "영국 국교회의 자선 독점권 공식 인정"],
+    "a": 0,
+    "h": "워크북 요약: 라운트리의 통계는 노동계층 복지 정책의 입법 토대가 되었습니다.",
+    "e": "라운트리의 실증적 연구는 빈곤이 구조적 모순임을 입증하여, 1906~1914년 영국 자유당 정부가 노령연금, 실업보험, 건강보험, 최저임금 등 굵직한 사회복지 입법을 추진하는 핵심 근거로 사용되었습니다."
+  },
+  {
+    "level": "중",
+    "q": "현대 절대적 빈곤 측정 방식(세계은행 기준)이 국가 간의 물가와 환율 차이를 보정하여 1.9달러라는 동일한 실질 가치를 비교할 수 있도록 적용하는 경제 지표는 무엇인가? [워크북 4장]",
+    "o": ["소비자물가지수(CPI)", "엥겔지수(Engel's Coefficient)", "구매력 평가(PPP, Purchasing Power Parity)", "인간개발지수(HDI)"],
+    "a": 2,
+    "h": "워크북 요약: 환율 차이로 인한 생활비 왜곡을 막기 위해 동일한 구매력을 기준으로 환산합니다.",
+    "e": "세계은행은 각국의 물가 수준이 다르기 때문에 단순 환율이 아닌 '구매력 평가(PPP)' 환율을 적용하여, 하루 1.9달러로 구매할 수 있는 재화의 양을 국가 간에 동등하게 비교하여 절대빈곤을 측정합니다."}
+        // 
+    ];
+
+    let curIdx = 0;
+    let wrongCount = 0; // 틀린 횟수 추적 변수
+
+    function loadQuestion() {
+        wrongCount = 0;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    function checkAnswer(idx, btn) {
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+        
+        if (idx === q.a) {
+            // 정답을 맞춘 경우
+            btn.classList.add('correct');
+            allBtns.forEach(b => b.style.pointerEvents = 'none'); // 클릭 방지
+            showExplanation();
+        } else {
+            // 틀린 경우
+            wrongCount++;
+            btn.classList.add('wrong');
+            btn.style.pointerEvents = 'none'; // 틀린 버튼 다시 못 누르게
+            
+            if (wrongCount === 1) {
+                // 첫 번째 틀림: 힌트만 보여줌
+                document.getElementById('hint-text').innerText = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                // 두 번째 틀림: 정답 공개
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                showExplanation();
+            }
+        }
+    }
+
+    function showExplanation() {
+        const q = quizData[curIdx];
+        document.getElementById('exp-text').innerText = q.e;
+        document.getElementById('exp-box').style.display = 'block';
+        document.getElementById('next-btn').style.display = 'block';
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            document.getElementById('quiz-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'block';
+            document.getElementById('result-msg').innerText = "4강 학습을 완료하셨습니다. 수고하셨습니다, 학우님!";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>

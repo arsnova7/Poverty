@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>빈곤론 퀴즈 [3강 - 상급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); opacity: 0.6; }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; color: #856404; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제3강: 빈곤의 관점 (상급)</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>정답 및 해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <p id="result-msg"></p>
+        <button class="option-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="option-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    /* [노트북LM 데이터]
+       형식: {"level": "상", "q": "질문", "o": ["보기1","보기2","보기3","보기4"], "a": 정답번호, "h": "힌트", "e": "해설"}
+    */
+    const quizData = [
+        {"level": "상", "q": "다음 중 로크(John Locke)의 빈곤에 대한 관점과 완전히 상반되는 주장은 무엇인가? (기출 변형) [기출문제_2025 3강]",
+    "o": ["사유재산은 노동의 결과이며 철저히 보호되어야 한다.", "빈곤은 개인의 노력 부족과 비합리적 선택에서 기인한다.", "정부는 사유재산을 지키기 위한 최소한의 개입만 수행해야 한다.", "빈곤은 사회 구조의 불평등과 재산제도에서 비롯되므로 강력한 국가 재분배가 필요하다."],
+    "a": 3,
+    "h": "기출문제 해설: 불평등을 사회구조 탓으로 돌리는 것은 루소의 입장입니다.",
+    "e": "빈곤을 사회 구조와 사유재산 제도의 폐단으로 보고 정부의 재분배를 요구하는 것은 루소의 시각이며, 로크의 자유시장 및 개인 책임론과는 완전히 대치됩니다."
+  },
+  {
+    "level": "상",
+    "q": "장 자크 루소의 빈곤관과 가장 거리가 먼 설명은 무엇인가? (기출 변형) [기출문제_2025 3강]",
+    "o": ["빈곤은 사유재산에서 비롯된 권력과 부의 불균형 산물이다.", "사회의 부조리를 해소하기 위해 일반 의지에 기반한 새로운 사회계약이 필요하다.", "정부는 적극적 개입을 통해 부를 재분배하여 공공의 이익을 도모해야 한다.", "시장의 자율적 자유와 무한 경쟁의 원리가 빈곤을 가장 효과적으로 해소한다."],
+    "a": 3,
+    "h": "기출문제 해설: 시장 방임을 통한 해결은 로크와 자유주의자들의 견해입니다.",
+    "e": "시장의 자유와 경쟁이 빈곤을 해결한다는 입장은 아담 스미스와 로크의 자유주의 사상이며, 루소는 시장이 불평등을 야기하므로 강력한 규제가 필요하다고 보았습니다."
+  },
+  {
+    "level": "상",
+    "q": "존 메이너드 케인즈(Keynes)의 경제 이론 및 정책 방향과 명백히 모순되는 것은? (기출 변형) [기출문제_2025 3강]",
+    "o": ["정부의 소비 촉진을 통한 적극적 경기 부양", "재정 지출을 대폭 늘려 유효수요를 확대", "완전고용 달성을 위한 공공 일자리 사업 확충", "정부의 시장 개입을 전면 축소하고 복지 지출을 대폭 감축"],
+    "a": 3,
+    "h": "기출문제 해설: 시장 개입 축소와 복지 감축은 1970년대 신자유주의의 특징입니다.",
+    "e": "케인즈는 불황기 시장의 실패를 보완하기 위해 큰 정부와 적극적 재정(복지) 투입을 지지했습니다. 개입 축소와 복지 감축은 케인즈주의를 공격하며 등장한 신자유주의 정책입니다."
+  },
+  {
+    "level": "상",
+    "q": "1970년대 이후 전 세계를 휩쓴 신자유주의 정책에 대해 비판적인 시각을 가장 잘 반영한 설명은? (기출 변형) [기출문제_2025 3강]",
+    "o": ["시장의 규제 철폐는 창의성을 자극하여 소득 양극화를 자연 소멸시킨다.", "작은 정부를 지향하며 복지를 축소하는 것은 취약계층의 사회적 배제를 낳고 사회 통합을 심각하게 약화시킨다.", "공공부문 민영화는 모든 국민에게 서비스 질 향상과 요금 인하를 보장한다.", "노동 유연화는 비정규직을 줄여 노동자의 고용 안정성을 극대화한다."],
+    "a": 1,
+    "h": "기출문제 해설: 신자유주의의 복지 축소가 부르는 부작용을 지적한 내용입니다.",
+    "e": "신자유주의 비판자들은 정부의 규제 완화와 복지 지출 삭감이 오히려 빈부격차를 키우고 사회적 약자를 보호망 밖으로 몰아내 사회적 배제와 분열을 가속한다고 지적합니다."
+  },
+  {
+    "level": "상",
+    "q": "마르크스(Karl Marx)의 빈곤관에 대한 설명으로 알맞지 않은 주장은? (기출 변형) [기출문제_2025 3강]",
+    "o": ["빈곤은 자본주의 생산 체제의 구조적 착취에서 필연적으로 발생한다.", "자본가는 노동자의 잉여가치를 빼앗아 부를 축적한다.", "빈곤을 해결하기 위해 프롤레타리아가 연대하여 생산수단을 공유화해야 한다.", "개인의 나태와 비합리적 소비 습관을 고치면 착취 구조 내에서도 빈곤을 완전히 극복할 수 있다."],
+    "a": 3,
+    "h": "기출문제 해설: 마르크스는 빈곤을 철저히 시스템(구조)의 모순으로 보았습니다.",
+    "e": "마르크스는 빈곤을 개인의 도덕성이나 노력 부족으로 환원하는 것을 비판하고, 자본주의의 소유 구조 자체가 필연적으로 착취와 빈곤을 낳는다고 파악했습니다."
+  },
+  {
+    "level": "상",
+    "q": "19세기 후반 영국의 빈곤 대응 기관이었던 '자선조직협회(COS)'와 '인보관 운동'의 문제 인식 차이를 바르게 비교한 것은? [기출분석 3강]",
+    "o": ["COS는 빈곤을 사회 구조의 모순으로, 인보관은 개인의 도덕적 결함으로 파악했다.", "COS는 빈곤의 원인을 개인적 결함으로 보고 시혜적 자선을 폈고, 인보관은 사회제도적 환경을 원인으로 보고 사회개혁을 추진했다.", "두 기관 모두 빈곤을 자본가의 잉여가치 착취의 결과로 보았다.", "두 기관 모두 빈곤은 자연법칙에 따른 운명이라고 규정했다."],
+    "a": 1,
+    "h": "기출분석 해설: COS는 우애방문원을 통해 빈민을 개조하려 했고, 인보관은 구조를 혁신하려 했습니다.",
+    "e": "자선조직협회(COS)는 우애방문원이 도덕적으로 가치 있는 빈민을 선별·개조하는 데 초점을 맞춘 반면, 인보관 운동은 지식인이 지역에 거주(Resident)하며 불평등한 환경과 제도의 구조적 개혁을 도모했습니다."
+  },
+  {
+    "level": "상",
+    "q": "자선조직협회(COS, 1869)의 주요 활동 성격 및 복지실천 기능으로 올바른 것은? [기출분석 3강]",
+    "o": ["거주자들이 빈민과 동고동락하며 권리 자각을 위한 토론을 주도했다.", "중복 구호를 막기 위해 기존 기관들의 서비스를 조정하고, 철저한 조사를 통해 자선 활동을 합리화했다.", "빈곤층을 위한 국가 주도의 보편적 공공부조 제도를 창설하는 데 앞장섰다.", "기존의 질서와 제도를 비판하며 혁명적 노동 운동을 전개했다."],
+    "a": 1,
+    "h": "기출분석 해설: 빈민 조사를 중시하고 무분별한 자선 활동을 체계화하려 했습니다.",
+    "e": "자선조직협회(COS)는 무분별한 자선이 빈민을 나태하게 만든다고 믿어, 기관 간의 업무 협조로 중복 구호를 막고 우애방문원의 조사를 통해 자선 활동의 효율성(합리화)을 추구했습니다."
+  },
+  {
+    "level": "상",
+    "q": "1880년대 나타난 인보관 운동(Settlement House Movement)의 실천적 특징과 거리가 먼 것은? [기출분석 3강]",
+    "o": ["대학생 등 교육받은 중류층이 빈민가에 직접 '거주(Resident)'하며 주민과 유대를 맺었다.", "개인의 도덕성 개조보다는 기존 제도 비판과 사회 개혁을 지향했다.", "주민 교육을 통해 대처 능력을 배양하고 상호 협동을 도모했다.", "케어 센터(Care Center)로서 빈민에게 일방적이고 수동적인 돌봄 서비스만을 제공했다."],
+    "a": 3,
+    "h": "기출분석 해설: 일방적 돌봄(케어 센터)은 자선조직협회(COS)의 지향점입니다.",
+    "e": "인보관 운동은 빈민을 권리 주체로 인정하여 '커뮤니티 센터(Community Center)'로서 기능했으며, 단순한 구호를 넘어 토론과 연대를 통한 지역사회 개혁에 중점을 두었습니다."
+  },
+  {
+    "level": "상",
+    "q": "학자 힐러리 실버(H. Silver)가 여러 국가의 '사회적 배제' 정의를 종합하면서 도출한 공통 핵심 요소에 해당하지 않는 것은? [교재 3장]",
+    "o": ["사회 통합의 부족", "주류 사회로부터의 주변화", "개인의 경제적 및 정치적 배제", "사유재산 제도의 전면적 해체"],
+    "a": 3,
+    "h": "교재 해설: 실버가 제시한 배제의 징후는 사회적 권리와 참여의 제한입니다.",
+    "e": "실버는 각국의 배제 개념에서 사회 통합 부족, 주변화, 정치/경제적 참여 차단, 유대 약화를 공통점으로 뽑아냈습니다. 사유재산 해체는 마르크스주의적 체제 혁명에 해당합니다."
+  },
+  {
+    "level": "상",
+    "q": "프랑스와 유럽연합(EU)이 '사회적 배제' 개념을 정책에 적극 도입하며 시행한 조치로 올바르게 짝지어진 것은? [교재 3장]",
+    "o": ["프랑스 - 1998년 사회배제 방지·퇴치법 제정", "EU - 2010년 리스본 전략을 통한 복지 국가 전면 해체 선언", "프랑스 - 구빈원(작업장) 시스템의 재도입", "EU - 1997년 암스테르담 조약을 통한 신자유주의 극대화 결의"],
+    "a": 0,
+    "h": "교재 해설: 프랑스와 EU는 사회 배제를 극복하기 위해 통합 지향적 제도를 강화했습니다.",
+    "e": "프랑스는 1998년 고용, 주거, 시민권을 포괄하는 사회배제 방지법을 제정했고, EU는 암스테르담 조약과 리스본 전략을 통해 오히려 빈곤 철폐와 사회 통합을 강력한 연합의 목표로 삼았습니다."
+  },
+  {
+    "level": "상",
+    "q": "자유주의, 수정자본주의, 사회주의 빈곤관이 파악하는 '개인과 구조의 관계'에 대한 설명 중 잘못된 것은? [강의록 3강]",
+    "o": ["자유주의 - 경제적 성취는 철저히 개인의 노력과 책임에 따라 결정된다.", "수정자본주의 - 개인의 노력도 중요하지만, 시장 불완전성을 극복하기 위한 구조적(국가) 보완이 필수적이다.", "사회주의 - 구조적 불평등과 계급이 개인의 삶을 지배하므로 자본주의 체제 자체의 혁명이 필요하다.", "신자유주의 - 빈곤의 일차적 책임은 부유층의 독점 구조에 있으므로 국가의 복지세를 크게 늘려야 한다."],
+    "a": 3,
+    "h": "강의록 해설: 신자유주의는 고전 자유주의를 계승하여 개인 책임을 강조합니다.",
+    "e": "신자유주의는 '작은 정부'를 지향하며 규제 완화와 복지 삭감을 추진합니다. 구조적 독점을 비판하며 부유세를 늘리자는 입장은 사회주의(또는 급진적 사민주의) 관점입니다."
+  },
+  {
+    "level": "상",
+    "q": "마가렛 대처(M. Thatcher)가 정치적 지침으로 삼았던 사상가 하이에크(F. Hayek)의 주장이 현대 복지국가에 던진 메시지로 가장 알맞은 것은? [강의록 3강]",
+    "o": ["국가의 경제 계획과 과도한 복지 개입은 결국 시민의 자유를 빼앗고 전체주의적 노예 상태로 이끈다.", "정부가 통화량을 극대화하여 화폐 가치를 떨어뜨려야만 완전고용을 달성할 수 있다.", "모든 시민에게 대가 없는 보편적 기본소득을 지급하는 것만이 자본주의를 구원한다.", "공공재산의 민영화는 필연적으로 부패를 낳으므로 국가가 모든 산업을 국유화해야 한다."],
+    "a": 0,
+    "h": "강의록 해설: 하이에크의 명저 『노예의 길』의 핵심 논지입니다.",
+    "e": "하이에크는 『노예의 길』에서 케인즈주의적 국가 개입이 시장 효율을 해치고 개인의 자유를 억압하여 파시즘과 같은 예속 상태를 초래한다고 경고하며, 신자유주의의 교본을 제공했습니다."
+  },
+  {
+    "level": "상",
+    "q": "루소가 『인간 불평등 기원론』을 넘어, 대안으로서 제시한 『사회계약론』의 핵심적인 정치적 해법은 무엇인가? [교재 3장]",
+    "o": ["자연 상태의 완전한 원시적 무질서로 돌아가는 것", "왕권신수설을 부활시켜 절대적 통치자에게 모든 권리를 양도하는 것", "일반 의지(General Will)에 기반하여 물리적 불평등을 대체하는 도덕적이고 합법적인 평등을 확립하는 것", "사유재산 제도를 극대화하여 부유층의 낙수효과를 기다리는 것"],
+    "a": 2,
+    "h": "교재 해설: 루소는 이기적 의지가 아닌 공공선을 향한 의지의 합의를 강조했습니다.",
+    "e": "루소는 문명사회의 불평등을 타파하기 위해, 구성원 전체의 공공 이익을 지향하는 '일반 의지'에 기반한 새로운 사회계약을 맺어 합법적 평등(복지국가적 재분배)을 창출해야 한다고 보았습니다."
+  },
+  {
+    "level": "상",
+    "q": "빈곤의 '정치적 요인'이 현실 사회에서 어떻게 빈곤을 고착화하는지 설명한 것으로 가장 올바른 것은? [교재 3장]",
+    "o": ["정부 관료의 부패와 자원 배분의 실패가 불평등 구조를 강화하여 취약계층의 정책 접근성을 원천 차단한다.", "개인이 정치 선거에 관심이 없어 투표장에 가지 않기 때문에 저절로 통장 잔고가 줄어든다.", "국제 무역에서 발생하는 환율 변동으로 인해 국가 부채가 증가한다.", "단순 노무직 등 저부가가치 산업이 기계화됨에 따라 실업률이 상승한다."],
+    "a": 0,
+    "h": "잠시만요 요약본: 공공재가 불공정하게 배분되는 부패와 정책 실패의 양상입니다.",
+    "e": "정치적 요인은 국가 권력이 복지를 외면하거나 부패하여 공공 자원이 기득권에만 배분되는 현상을 말합니다. 투표 기피는 원인이 아니며, 무역이나 산업 기계화는 경제적/구조적/국제적 요인입니다."
+  },
+  {
+    "level": "상",
+    "q": "프랑스의 공화주의적 관점과 스웨덴의 사민주의적 관점이 '사회적 배제'를 진단하는 시각의 핵심적 차이를 바르게 비교한 것은? [교재 3장]",
+    "o": ["공화주의는 '연대의 결핍'에 초점을 맞추어 공공성 회복을 중시하고, 사민주의는 '권력과 희소자원의 독점(사회봉쇄)'에 초점을 맞추어 권력 부여를 중시한다.", "공화주의는 개인의 도덕성 회복을 최우선시하고, 사민주의는 종교적 가르침의 강화를 해결책으로 본다.", "두 관점 모두 자본주의 철폐와 생산수단의 공산화만이 유일한 해결책이라고 주장한다.", "공화주의는 강력한 작은 정부를, 사민주의는 노동조합의 완전한 해체를 목표로 삼는다."],
+    "a": 0,
+    "h": "교재 해설: 공화주의(연대/공공성) vs 사민주의(갈등/권력 배분).",
+    "e": "프랑스 공화주의는 사회 전체의 유기적 결합 단절을 문제 삼아 연대의 회복을 도모하는 반면, 스웨덴 사민주의는 지배층이 특권을 지키려 약자를 밀어내는 '사회적 봉쇄' 구조 자체를 타파하려 권력을 배분하는 데 주력합니다."}
+        // 
+    ];
+
+    let curIdx = 0;
+    let wrongCount = 0; // 틀린 횟수 추적 변수
+
+    function loadQuestion() {
+        wrongCount = 0;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    function checkAnswer(idx, btn) {
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+        
+        if (idx === q.a) {
+            // 정답을 맞춘 경우
+            btn.classList.add('correct');
+            allBtns.forEach(b => b.style.pointerEvents = 'none'); // 클릭 방지
+            showExplanation();
+        } else {
+            // 틀린 경우
+            wrongCount++;
+            btn.classList.add('wrong');
+            btn.style.pointerEvents = 'none'; // 틀린 버튼 다시 못 누르게
+            
+            if (wrongCount === 1) {
+                // 첫 번째 틀림: 힌트만 보여줌
+                document.getElementById('hint-text').innerText = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                // 두 번째 틀림: 정답 공개
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                showExplanation();
+            }
+        }
+    }
+
+    function showExplanation() {
+        const q = quizData[curIdx];
+        document.getElementById('exp-text').innerText = q.e;
+        document.getElementById('exp-box').style.display = 'block';
+        document.getElementById('next-btn').style.display = 'block';
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            document.getElementById('quiz-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'block';
+            document.getElementById('result-msg').innerText = "3강 학습을 완료하셨습니다. 수고하셨습니다, 학우님!";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>

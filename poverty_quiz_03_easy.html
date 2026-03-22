@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>빈곤론 퀴즈 [3강 - 초급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); opacity: 0.6; }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; color: #856404; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제3강: 빈곤의 관점 (초급)</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>정답 및 해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <p id="result-msg"></p>
+        <button class="option-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="option-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    /* [노트북LM 데이터]
+       형식: {"level": "하", "q": "질문", "o": ["보기1","보기2","보기3","보기4"], "a": 정답번호, "h": "힌트", "e": "해설"}
+    */
+    const quizData = [
+        {"level": "하", "q": "빈곤의 발생 원인 중 '소득 및 일자리 부족', '불평등과 부의 집중', '시장 실패 및 금융 접근성 부족'을 포괄하는 요인은 무엇인가? [교재 3장]",
+    "o": ["구조적 요인", "경제적 요인", "정치적 요인", "사회·문화적 요인"],
+    "a": 1,
+    "h": "잠시만요 요약본: 경제 활동 및 자본의 분배와 직접적으로 연관된 요인입니다.",
+    "e": "경제적 요인에는 단순한 실업뿐만 아니라 워킹푸어를 양산하는 저임금, 자산의 불평등한 집중, 신용 부족으로 인한 금융 배제 등이 포함됩니다."
+  },
+  {
+    "level": "하",
+    "q": "빈곤을 초래하는 '구조적 요인'에 해당하지 않는 것은 무엇인가? [교재 3장]",
+    "o": ["교육 격차", "사회안전망의 부족", "노동시장 이중구조", "정부의 부패와 정책 실패"],
+    "a": 3,
+    "h": "잠시만요 요약본: 정부 정책이나 부패는 다른 차원의 요인으로 분류됩니다.",
+    "e": "정부의 부패, 공공 서비스 축소, 정책 실패 등은 '정치적 요인'에 해당합니다. 교육 격차와 노동시장 이중구조는 대표적인 '구조적 요인'입니다."
+  },
+  {
+    "level": "하",
+    "q": "존 로크(John Locke)가 주장한 빈곤의 가장 근본적인 원인은 무엇인가? [잠시만요 요약본]",
+    "o": ["사유재산 제도의 모순", "국가의 지나친 복지 개입", "개인의 성실한 노동 부족과 낮은 생산성", "자본가의 잉여가치 착취"],
+    "a": 2,
+    "h": "잠시만요 요약본: 로크는 사유재산을 옹호하며 빈곤의 원인을 개인에게 두었습니다.",
+    "e": "로크는 노동을 부의 원천으로 보았으며, 개인이 성실히 노동하지 않아 재산을 축적하지 못한 것(노동 부족)을 빈곤의 원인으로 파악했습니다."
+  },
+  {
+    "level": "하",
+    "q": "존 로크가 바라본 사유재산과 국가의 역할에 대한 설명으로 올바른 것은? [교재 3장]",
+    "o": ["국가는 빈곤 해결을 위해 부를 적극적으로 재분배해야 한다.", "사유재산은 노동의 정당한 결과이므로, 국가는 이를 보호하는 최소한의 역할만 해야 한다.", "시장이 불평등을 낳으므로 국가는 시장을 엄격히 통제해야 한다.", "모든 사유재산은 국가가 몰수하여 공공재로 만들어야 한다."],
+    "a": 1,
+    "h": "잠시만요 요약본: 로크는 시장 개입 최소화와 경제적 자유주의 이념에 영향을 주었습니다.",
+    "e": "로크는 노동을 통해 획득한 사유재산은 자연법에 의해 정당화된다고 보았으며, 국가는 재산 보호와 사회 질서 유지를 위한 야경국가 수준의 역할만 해야 한다고 보았습니다."
+  },
+  {
+    "level": "하",
+    "q": "장 자크 루소(J.J. Rousseau)가 지목한 인간 사회의 빈곤과 불평등의 결정적인 기원은 무엇인가? [잠시만요 요약본]",
+    "o": ["사유재산 제도의 탄생", "개인의 나태와 비합리성", "종교의 타락", "산업혁명에 따른 기계화"],
+    "a": 0,
+    "h": "잠시만요 요약본: 루소는 자연 상태의 평등이 '이 제도'의 도입으로 파괴되었다고 보았습니다.",
+    "e": "루소는 본래 평등했던 자연 상태에서 사유재산 제도가 생겨나면서 권력과 부의 불균형이 초래되었고, 이것이 빈곤의 근본 원인이라고 주장했습니다."
+  },
+  {
+    "level": "하",
+    "q": "빈곤 해결을 위한 루소의 정치·경제적 대안으로 가장 적절한 것은? [교재 3장]",
+    "o": ["자유시장 방임주의 채택", "생산수단의 완전한 민영화", "정부의 적극적 개입과 부의 재분배 정책", "복지 예산의 전면적 삭감"],
+    "a": 2,
+    "h": "잠시만요 요약본: 루소는 사회민주주의 이념에 영향을 미치는 해법을 제안했습니다.",
+    "e": "루소는 소수가 사유재산을 독점하는 구조를 타파하기 위해 일반 의지를 통한 새로운 사회계약과 국가의 적극적인 부의 재분배가 필요하다고 보았습니다."
+  },
+  {
+    "level": "하",
+    "q": "18세기 아담 스미스(Adam Smith)가 주장한 고전적 자유주의 경제학의 핵심 개념으로, 시장이 자율적으로 조절되는 원리를 뜻하는 용어는? [교재 3장]",
+    "o": ["잉여가치", "보이지 않는 손", "유효수요", "사회적 봉쇄"],
+    "a": 1,
+    "h": "잠시만요 요약본: 개인의 이기심이 공공의 이익을 만들어내는 시장 메커니즘입니다.",
+    "e": "아담 스미스는 국부론에서 개인의 이기심이 '보이지 않는 손'을 작동시켜 시장의 수요와 공급을 자동 조절하고 국가 전체의 부를 증진시킨다고 보았습니다."
+  },
+  {
+    "level": "하",
+    "q": "자본가의 노동 착취를 빈곤의 근본 원인으로 진단하고, 프롤레타리아 혁명을 통한 생산수단의 사회화를 주장한 철학자는? [교재 3장]",
+    "o": ["장 자크 루소", "프리드리히 하이에크", "카를 마르크스", "존 메이너드 케인즈"],
+    "a": 2,
+    "h": "잠시만요 요약본: 자본주의 체제 해체와 사회주의 빈곤관을 확립한 인물입니다.",
+    "e": "마르크스는 자본주의를 부르주아와 프롤레타리아의 계급투쟁으로 보고, 노동가치설에 입각해 잉여가치 착취가 빈곤을 낳으므로 혁명이 필요하다고 주장했습니다."
+  },
+  {
+    "level": "하",
+    "q": "1929년 대공황 이후 등장하여, 정부가 적극적인 재정 정책을 통해 시장 개입을 해야 한다고 주장한 케인즈의 이념적 조류는? [잠시만요 요약본]",
+    "o": ["수정자본주의", "신자유주의", "사회주의", "고전적 자유주의"],
+    "a": 0,
+    "h": "잠시만요 요약본: 자본주의의 한계를 정부 개입으로 보완하려는 이념입니다.",
+    "e": "케인즈는 시장이 스스로 균형을 회복하지 못한다고 보고, 정부가 공공 투자로 유효수요를 창출하는 '수정자본주의'를 체계화했습니다."
+  },
+  {
+    "level": "하",
+    "q": "1970년대 스태그플레이션을 겪으며 부상하여 '작은 정부', 규제 완화, 복지 축소를 강하게 주장한 경제 이념은? [강의록 3강]",
+    "o": ["수정자본주의", "신자유주의", "사회민주주의", "마르크스주의"],
+    "a": 1,
+    "h": "잠시만요 요약본: 마가렛 대처와 레이건이 도입한 자유시장 회귀 이념입니다.",
+    "e": "신자유주의는 국가 개입이 비효율을 낳는다고 비판하며, 시장 자율성 극대화와 개인의 책임을 다시 강조하여 복지 국가 모델을 후퇴시켰습니다."
+  },
+  {
+    "level": "하",
+    "q": "1974년 프랑스 르누아르 장관이 처음 사용한 용어로, 개인이나 집단이 경제·사회·정치·문화적 관계에서 소외되거나 단절되는 현상을 뜻하는 개념은? [교재 3장]",
+    "o": ["낙수 효과", "사회적 봉쇄", "사회적 배제", "탈상품화"],
+    "a": 2,
+    "h": "잠시만요 요약본: 주류 사회로부터 소외되는 포괄적인 상태를 지칭합니다.",
+    "e": "사회적 배제(Social Exclusion)는 단순한 소득 결핍을 넘어 인간관계, 시민권, 서비스 이용 등에서 다차원적으로 배제되는 복합적 빈곤 현상을 의미합니다."
+  },
+  {
+    "level": "하",
+    "q": "사회적 배제의 핵심적인 3가지 특성으로 올바르게 짝지어진 것은? [교재 3장]",
+    "o": ["일회성, 고립성, 파편성", "다차원성, 누적성, 빈곤과의 연관성", "자발성, 유연성, 수익성", "도덕성, 종교성, 계급성"],
+    "a": 1,
+    "h": "잠시만요 요약본: 다양한 영역에서 세대를 이어 대물림되는 특성이 있습니다.",
+    "e": "사회적 배제는 여러 영역에서 동시다발적으로 일어나는 '다차원성', 세대를 건너 대물림되는 '누적성', 그리고 물질적 결핍을 동반하는 '빈곤과의 연관성'을 지닙니다."
+  },
+  {
+    "level": "하",
+    "q": "사회적 배제의 원인을 '도덕 규범에서 벗어난 개인의 일탈적 행위'로 정의하는 이념적 관점은? [잠시만요 요약본]",
+    "o": ["신자유주의", "공화주의", "사민주의", "사회주의"],
+    "a": 0,
+    "h": "잠시만요 요약본: 영국에서 주로 적용되었으며 개인의 책임을 강조합니다.",
+    "e": "신자유주의적 관점은 배제가 주류 규범에 적응하지 못한 개인 탓이라 보고, 당사자가 스스로 도덕적·경제적으로 노력해 규범에 맞춰야 한다고 주장합니다."
+  },
+  {
+    "level": "하",
+    "q": "프랑스에서 주로 확산된 관점으로, 사회적 배제를 '개인과 사회 간의 유기적 연대 결핍'으로 규정하는 관점은? [잠시만요 요약본]",
+    "o": ["사회주의", "공화주의", "신자유주의", "수정자본주의"],
+    "a": 1,
+    "h": "잠시만요 요약본: 취약계층을 사회 모순의 희생자로 보고 연대를 중시합니다.",
+    "e": "공화주의적 관점은 사회 구성원의 유대 단절이 배제를 낳는다고 보며, 공공성 원칙에 따라 국가가 이들을 포용하고 연대를 복원할 의무가 있다고 주장합니다."
+  },
+  {
+    "level": "하",
+    "q": "사회적 배제를 '다양한 사회 세력 간의 갈등 속에서 지배층이 진입을 제한하는 사회적 봉쇄 구조'로 이해하는 관점은? [잠시만요 요약본]",
+    "o": ["신자유주의", "공화주의", "사회주의", "사회민주주의(사민주의)"],
+    "a": 3,
+    "h": "잠시만요 요약본: 스웨덴이 대표적이며 권리 보장과 권력 부여를 중시합니다.",
+    "e": "사민주의적 관점은 배제를 가진 자들의 '사회적 봉쇄(Social Closure)' 탓으로 보며, 소외된 계층에게 권리와 실질적 권력을 주어 참여를 확대해야 한다고 봅니다."}
+        // 
+    ];
+
+    let curIdx = 0;
+    let wrongCount = 0; // 틀린 횟수 추적 변수
+
+    function loadQuestion() {
+        wrongCount = 0;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    function checkAnswer(idx, btn) {
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+        
+        if (idx === q.a) {
+            // 정답을 맞춘 경우
+            btn.classList.add('correct');
+            allBtns.forEach(b => b.style.pointerEvents = 'none'); // 클릭 방지
+            showExplanation();
+        } else {
+            // 틀린 경우
+            wrongCount++;
+            btn.classList.add('wrong');
+            btn.style.pointerEvents = 'none'; // 틀린 버튼 다시 못 누르게
+            
+            if (wrongCount === 1) {
+                // 첫 번째 틀림: 힌트만 보여줌
+                document.getElementById('hint-text').innerText = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                // 두 번째 틀림: 정답 공개
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                showExplanation();
+            }
+        }
+    }
+
+    function showExplanation() {
+        const q = quizData[curIdx];
+        document.getElementById('exp-text').innerText = q.e;
+        document.getElementById('exp-box').style.display = 'block';
+        document.getElementById('next-btn').style.display = 'block';
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            document.getElementById('quiz-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'block';
+            document.getElementById('result-msg').innerText = "3강 학습을 완료하셨습니다. 수고하셨습니다, 학우님!";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>

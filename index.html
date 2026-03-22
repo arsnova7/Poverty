@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026 빈곤론 학습 - 대전/충청 사회복지학과 2학년의 배움터</title>
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4a69bd;
+            --summary-bg: #009432; /* 꼭 기억하세요 (그린) */
+            --card-bg: #6f42c1;    /* 플래시카드 (퍼플) */
+            --level-easy: #2ecc71;  /* 씨앗 */
+            --level-normal: #f1c40f; /* 새싹 */
+            --level-hard: #e74c3c;   /* 나무 */
+            --bg-gradient: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+        }
+        
+        body { font-family: 'Pretendard', sans-serif; background: var(--bg-gradient); margin: 0; padding: 40px 20px; min-height: 100vh; color: #2f3640; }
+        .container { max-width: 1100px; margin: 0 auto; text-align: center; }
+        
+        .header { margin-bottom: 50px; }
+        .header h1 { font-size: 2.8rem; color: #2f3640; margin-bottom: 10px; font-weight: 800; }
+        .header p { color: #7f8c8d; font-size: 1.2rem; font-weight: 500; }
+        
+        /* 15강 그리드 레이아웃 */
+        .lecture-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); 
+            gap: 20px; 
+            padding: 20px;
+        }
+        
+        .lecture-card {
+            background: white; padding: 25px 20px; border-radius: 15px; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: 0.3s ease; 
+            border-top: 5px solid var(--primary); text-align: left;
+        }
+        .lecture-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .lecture-card .num { font-size: 0.9rem; color: var(--primary); font-weight: 800; margin-bottom: 8px; display: block; }
+        .lecture-card h3 { margin: 0; font-size: 1.05rem; color: #2f3640; line-height: 1.4; word-break: keep-all; }
+
+        /* 모달 스타일 */
+        #modalOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); display:none; justify-content:center; align-items:center; z-index:1000; backdrop-filter: blur(4px); }
+        .modal { background:white; padding:35px; border-radius:25px; width:90%; max-width:420px; text-align:center; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
+        .modal h2 { margin-top: 0; margin-bottom: 20px; color: #2f3640; font-size: 1.4rem; font-weight: 800; }
+        
+        .menu-link { display:flex; align-items: center; justify-content: center; text-decoration:none; padding:15px; margin:10px 0; border-radius:12px; color:white; font-weight:700; transition: 0.2s; font-size: 1rem; }
+        .menu-link svg { margin-right: 10px; width: 20px; height: 20px; fill: white; }
+        
+        .link-summary { background: var(--summary-bg); }
+        .link-card { background: var(--card-bg); }
+        .link-quiz-easy { background: var(--level-easy); color: #1e3718; }
+        .link-quiz-normal { background: var(--level-normal); color: #333; }
+        .link-quiz-hard { background: var(--level-hard); color: white; }
+        
+        .close-btn { margin-top:20px; color:#95a5a6; cursor:pointer; font-weight: 500; display: inline-block; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>📗 2026 빈곤론 학습</h1>
+        <p>2학년의 빈곤론 학습을 향한 15단계 여정</p>
+    </div>
+
+    <div class="lecture-grid" id="lectureGrid">
+        </div>
+
+    <div style="margin-top: 50px; opacity: 0.6; font-size: 1.5rem;">
+        "장학금을 향하여 ~ 돌진!" <br>
+        만든이: 유승욱 도우미:클로드, 제미나이, 쳇지피티, 노트북L.M, 젠스파크
+    </div>
+</div>
+
+<div id="modalOverlay" onclick="closeMenu(event)">
+    <div class="modal">
+        <h2 id="modalTitle">강의 선택</h2>
+        
+        <a id="linkSummary" href="#" class="menu-link link-summary">📌 잠시만요! 꼭 기억하세요</a>
+        <a id="linkCard" href="#" class="menu-link link-card">🗂️ 플래시카드 학습</a>
+        
+        <div style="margin: 20px 0 10px; font-weight: 800; color: #7f8c8d; font-size: 0.85rem;">성장 단계별 퀴즈</div>
+        
+        <a id="linkQuizEasy" href="#" class="menu-link link-quiz-easy">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/></svg> 초급 (씨앗)
+        </a>
+        <a id="linkQuizNormal" href="#" class="menu-link link-quiz-normal">
+            <svg viewBox="0 0 24 24"><path d="M13 14.18V22H11V14.18C8.32 14.18 6.43 15.22 4.88 15.79V11.03C4.88 10.45 4.42 10 3.83 10C3.24 10 2.78 10.45 2.78 11.03V16.32C2.78 17.38 3.83 17.38 4.42 17.38V15.79C6 15.22 8 14.18 11 14.18V22H13V14.18C16 14.18 18 15.22 19.58 15.79V17.38C20.17 17.38 21.22 17.38 21.22 16.32V11.03C21.22 10.45 20.76 10 20.17 10C19.58 10 19.12 10.45 19.12 11.03V15.79C17.57 15.22 15.68 14.18 13 14.18Z"/></svg> 중급 (새싹)
+        </a>
+        <a id="linkQuizHard" href="#" class="menu-link link-quiz-hard">
+            <svg viewBox="0 0 24 24"><path d="M12 2L9 7H15L12 2ZM12 22V14M8 22V18M16 22V18"/></svg> 고급 (나무)
+        </a>
+        
+        <div class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">창 닫기</div>
+    </div>
+</div>
+
+<script>
+    const lectures = [
+        "사회복지와 빈곤", "빈곤과 복지의 역사", "빈곤의 관점", "빈곤선", "빈곤의 측정",
+        "빈곤, 교육과 노동", "빈곤, 건강과 주거", "빈곤정책Ⅰ: 공공부조정책", "빈곤정책Ⅱ: 조세 및 사회보장 (공사 중)", "아동과 빈곤 (커밍 쑤운~)",
+        "여성과 빈곤 (I'll be back soon)", "노인과 빈곤 (커밍 쑤운~)", "장애인과 빈곤 (공사 중)", "빈곤과 차별(커밍 쑤운~ ㅋ)", "빈곤론의 반성과 과제 (I'll be back soon)"
+    ];
+
+    const grid = document.getElementById('lectureGrid');
+    lectures.forEach((title, index) => {
+        const num = index + 1;
+        const card = document.createElement('div');
+        card.className = 'lecture-card';
+        card.onclick = () => openMenu(num, title);
+        card.innerHTML = `<span class="num">${num.toString().padStart(2, '0')}강</span><h3>${title}</h3>`;
+        grid.appendChild(card);
+    });
+
+    function openMenu(num, title) {
+        const modal = document.getElementById('modalOverlay');
+        const fNum = num.toString().padStart(2, '0');
+        document.getElementById('modalTitle').innerText = `${fNum}강. ${title}`;
+        
+        // 경로 자동 연결
+        document.getElementById('linkSummary').href = `poverty_summary_${fNum}.html`;
+        document.getElementById('linkCard').href = `poverty_card_${fNum}.html`;
+        document.getElementById('linkQuizEasy').href = `poverty_quiz_${fNum}_easy.html`;
+        document.getElementById('linkQuizNormal').href = `poverty_quiz_${fNum}_normal.html`;
+        document.getElementById('linkQuizHard').href = `poverty_quiz_${fNum}_hard.html`;
+        
+        modal.style.display = 'flex';
+    }
+
+    function closeMenu(event) {
+        if (event.target === document.getElementById('modalOverlay')) {
+            document.getElementById('modalOverlay').style.display = 'none';
+        }
+    }
+</script>
+</body>
+</html>
