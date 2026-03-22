@@ -10,9 +10,9 @@
             --primary: #4a69bd;
             --summary-bg: #009432; /* 꼭 기억하세요 (그린) */
             --card-bg: #6f42c1;    /* 플래시카드 (퍼플) */
-            --level-easy: #2ecc71;  /* 씨앗 */
-            --level-normal: #f1c40f; /* 새싹 */
-            --level-hard: #e74c3c;   /* 나무 */
+            --level-easy: #2ecc71;  /* 씨앗 배경 */
+            --level-normal: #f1c40f; /* 새싹 배경 */
+            --level-hard: #e74c3c;   /* 나무 배경 */
             --bg-gradient: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
         }
         
@@ -23,7 +23,6 @@
         .header h1 { font-size: 2.8rem; color: #2f3640; margin-bottom: 10px; font-weight: 800; }
         .header p { color: #7f8c8d; font-size: 1.2rem; font-weight: 500; }
         
-        /* 15강 그리드 레이아웃 */
         .lecture-grid { 
             display: grid; 
             grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); 
@@ -40,19 +39,20 @@
         .lecture-card .num { font-size: 0.9rem; color: var(--primary); font-weight: 800; margin-bottom: 8px; display: block; }
         .lecture-card h3 { margin: 0; font-size: 1.05rem; color: #2f3640; line-height: 1.4; word-break: keep-all; }
 
-        /* 모달 스타일 */
         #modalOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); display:none; justify-content:center; align-items:center; z-index:1000; backdrop-filter: blur(4px); }
         .modal { background:white; padding:35px; border-radius:25px; width:90%; max-width:420px; text-align:center; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
         .modal h2 { margin-top: 0; margin-bottom: 20px; color: #2f3640; font-size: 1.4rem; font-weight: 800; }
         
-        .menu-link { display:flex; align-items: center; justify-content: center; text-decoration:none; padding:15px; margin:10px 0; border-radius:12px; color:white; font-weight:700; transition: 0.2s; font-size: 1rem; }
-        .menu-link svg { margin-right: 10px; width: 20px; height: 20px; fill: white; }
+        .menu-link { display:flex; align-items: center; justify-content: center; text-decoration:none; padding:15px; margin:10px 0; border-radius:12px; color:white; font-weight:700; transition: 0.2s; font-size: 1rem; min-height: 60px; }
+        
+        /* 아이콘 전용 스타일: 글자를 없앴으므로 아이콘이 중앙에 오게 설정 */
+        .menu-link svg { width: 40px; height: 40px; }
         
         .link-summary { background: var(--summary-bg); }
         .link-card { background: var(--card-bg); }
-        .link-quiz-easy { background: var(--level-easy); color: #1e3718; }
-        .link-quiz-normal { background: var(--level-normal); color: #333; }
-        .link-quiz-hard { background: var(--level-hard); color: white; }
+        .link-quiz-easy { background: var(--level-easy); }
+        .link-quiz-normal { background: var(--level-normal); }
+        .link-quiz-hard { background: var(--level-hard); }
         
         .close-btn { margin-top:20px; color:#95a5a6; cursor:pointer; font-weight: 500; display: inline-block; }
     </style>
@@ -65,12 +65,11 @@
         <p>2학년의 빈곤론 학습을 향한 15단계 여정</p>
     </div>
 
-    <div class="lecture-grid" id="lectureGrid">
-        </div>
+    <div class="lecture-grid" id="lectureGrid"></div>
 
     <div style="margin-top: 50px; opacity: 0.6; font-size: 1.5rem;">
         "장학금을 향하여 ~ 돌진!" <br>
-        만든이: 유승욱 도우미:클로드, 제미나이, 쳇지피티, 노트북L.M, 젠스파크
+        만든이: 유승욱 도우미:  제미나이, 클로드, 쳇지피티, 노트북 L.M., 젠스파크
     </div>
 </div>
 
@@ -83,14 +82,25 @@
         
         <div style="margin: 20px 0 10px; font-weight: 800; color: #7f8c8d; font-size: 0.85rem;">성장 단계별 퀴즈</div>
         
-        <a id="linkQuizEasy" href="#" class="menu-link link-quiz-easy">
-            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/></svg> 초급 (씨앗)
+        <a id="linkQuizEasy" href="#" class="menu-link link-quiz-easy" title="초급">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+                <ellipse cx="12" cy="14" rx="4" ry="6" fill="#8B5A2B"/>
+            </svg>
         </a>
-        <a id="linkQuizNormal" href="#" class="menu-link link-quiz-normal">
-            <svg viewBox="0 0 24 24"><path d="M13 14.18V22H11V14.18C8.32 14.18 6.43 15.22 4.88 15.79V11.03C4.88 10.45 4.42 10 3.83 10C3.24 10 2.78 10.45 2.78 11.03V16.32C2.78 17.38 3.83 17.38 4.42 17.38V15.79C6 15.22 8 14.18 11 14.18V22H13V14.18C16 14.18 18 15.22 19.58 15.79V17.38C20.17 17.38 21.22 17.38 21.22 16.32V11.03C21.22 10.45 20.76 10 20.17 10C19.58 10 19.12 10.45 19.12 11.03V15.79C17.57 15.22 15.68 14.18 13 14.18Z"/></svg> 중급 (새싹)
+
+        <a id="linkQuizNormal" href="#" class="menu-link link-quiz-normal" title="중급">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+                <path d="M12 20V12" stroke="#2E7D32" stroke-width="2"/>
+                <path d="M12 12C10 10 7 10 6 12C8 14 11 14 12 12Z" fill="#4CAF50"/>
+                <path d="M12 12C14 10 17 10 18 12C16 14 13 14 12 12Z" fill="#66BB6A"/>
+            </svg>
         </a>
-        <a id="linkQuizHard" href="#" class="menu-link link-quiz-hard">
-            <svg viewBox="0 0 24 24"><path d="M12 2L9 7H15L12 2ZM12 22V14M8 22V18M16 22V18"/></svg> 고급 (나무)
+
+        <a id="linkQuizHard" href="#" class="menu-link link-quiz-hard" title="고급">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+                <rect x="10" y="14" width="4" height="6" fill="#6D4C41"/>
+                <circle cx="12" cy="10" r="5" fill="#2E7D32"/>
+            </svg>
         </a>
         
         <div class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">창 닫기</div>
@@ -119,7 +129,6 @@
         const fNum = num.toString().padStart(2, '0');
         document.getElementById('modalTitle').innerText = `${fNum}강. ${title}`;
         
-        // 경로 자동 연결
         document.getElementById('linkSummary').href = `poverty_summary_${fNum}.html`;
         document.getElementById('linkCard').href = `poverty_card_${fNum}.html`;
         document.getElementById('linkQuizEasy').href = `poverty_quiz_${fNum}_easy.html`;
