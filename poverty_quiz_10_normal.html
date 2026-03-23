@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>빈곤론 퀴즈 [10강 - 중급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); opacity: 0.6; }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; color: #856404; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .result-btn { width:100%; padding:15px; margin:10px 0; border:1px solid #e2e8f0; border-radius:10px; background:white; cursor:pointer; font-size:1rem; font-weight:bold; transition:0.2s; }
+    .result-btn:hover { background:#f0f4ff; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제10강: 아동과 빈곤 (중급)</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>정답 및 해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <p id="result-msg"></p>
+        <button class="result-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="result-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    /* [노트북LM 데이터]
+       형식: {"level": "중", "q": "질문", "o": ["보기1","보기2","보기3","보기4"], "a": 정답번호, "h": "힌트", "e": "해설"}
+    */
+    const quizData = [
+        {"level": "중", "q": "OECD에서 아동빈곤율을 산출할 때 사용하는 '상대적 빈곤선'의 기준은 무엇인가요? [교재 10장 / 워크북]",
+    "o": [
+      "중위소득의 40% 미만",
+      "중위소득의 50% 미만",
+      "중위소득의 60% 미만",
+      "평균소득의 70% 미만"
+    ],
+    "a": 1,
+    "h": "EU는 60%를 사용하지만, OECD는 이 수치를 사용합니다.",
+    "e": "OECD는 아동빈곤율을 연간 중위 균등화 소득의 50% 미만인 가구에 속한 아동의 비율로 정의합니다. (참고로 EU는 중위소득의 60%를 기준으로 삼습니다.)"
+  },
+  {
+    "level": "중",
+    "q": "우리나라 아동빈곤율 실태에서 양부모가정(약 10.7%)에 비해 아동빈곤율이 47~48%로 현저히 높게 나타나는 가구 형태는 무엇인가요? [교재 10장 / 워크북]",
+    "o": [
+      "다문화가정",
+      "한부모가정",
+      "3세대 동거가정",
+      "맞벌이가정"
+    ],
+    "a": 1,
+    "h": "혼자서 양육과 생계를 동시에 책임져야 하는 구조적 어려움이 큽니다.",
+    "e": "한국의 한부모가정 아동빈곤율은 47.7% 수준으로 양부모가정에 비해 압도적으로 높으며, 돌봄과 양육 부담으로 인해 미취업 비율도 높아 빈곤에 매우 취약합니다."
+  },
+  {
+    "level": "중",
+    "q": "아동빈곤의 다차원적 지표 중 물질적 박탈보다 끼니, 여가, 생활공간, 여행 등 아동의 '주관적 경험'을 더 잘 반영하는 지표의 이름은 무엇인가요? [교재 10장 / 워크북]",
+    "o": [
+      "빈곤갭",
+      "엥겔지수",
+      "결핍지수",
+      "슈바베지수"
+    ],
+    "a": 2,
+    "h": "14개 항목으로 구성되며, 2개 이상 결핍 시 체감하는 것으로 봅니다.",
+    "e": "아동종합실태조사에서 사용되는 '결핍 지수'는 끼니, 여가, 공간, 여행 등 14개 항목으로 구성되어 아동이 주관적으로 체감하는 일상적인 결핍을 잘 반영합니다. 반면 '박탈 점수'는 31개 항목으로 물리적 조건에 가깝습니다."
+  },
+  {
+    "level": "중",
+    "q": "피터 타운센드(Townsend)는 빈곤을 물리적 박탈과 사회적 박탈로 구분했습니다. 다음 중 '사회적 박탈'에 해당하는 것은 무엇인가요? [교재 10장 / 워크북]",
+    "o": [
+      "의식주 부족",
+      "근로 환경의 열악함",
+      "안전하지 않은 거주지",
+      "지역사회 통합 및 여가·교육 활동 배제"
+    ],
+    "a": 3,
+    "h": "인간관계와 문화적 참여를 누리지 못하는 상태를 뜻합니다.",
+    "e": "물리적 박탈이 의식주, 환경, 근로조건 등을 의미한다면, 사회적 박탈은 권리, 가족 활동, 지역사회 통합, 공식적 참여, 여가, 교육 등에서의 배제를 의미합니다."
+  },
+  {
+    "level": "중",
+    "q": "영국 정부가 개발한 아동빈곤의 다차원적 측정 영역에 포함되지 않는 것은 무엇인가요? [교재 10장 / 워크북]",
+    "o": [
+      "감당할 수 없는 부채",
+      "아무도 일하지 않는 무직 가구",
+      "부모의 건강 및 기술 수준",
+      "가구주의 특정 정치적 성향"
+    ],
+    "a": 3,
+    "h": "부채, 주택, 부모 역량 등은 빈곤의 원인이자 지표입니다.",
+    "e": "영국의 다차원적 아동빈곤 지표는 소득과 물질적 박탈, 무직 가구, 부채, 빈한한 주택, 부모의 기술 수준, 교육 접근성, 가족 안정성, 부모 건강 등을 포함합니다. 정치적 성향은 포함되지 않습니다."
+  },
+  {
+    "level": "중",
+    "q": "강지나 작가의 책 『가난한 아이들은 어떻게 어른이 되는가』에 묘사된 빈곤아동의 특징으로 가장 적절한 것은 무엇인가요? [교재 10장 / 워크북]",
+    "o": [
+      "경제적 결핍에도 불구하고 뚜렷하고 구체적인 장래 희망을 갖는다.",
+      "학업에 완벽히 적응하여 대부분 상위권 대학에 진학한다.",
+      "현실의 불안감 때문에 구체적인 꿈이나 목표를 세우는 데 어려움을 겪는다.",
+      "부모의 전폭적인 심리적 지지로 자존감이 또래보다 매우 높다."
+    ],
+    "a": 2,
+    "h": "'꿈을 꾸어도 지금의 상황이 그것을 이룰 수 있게 할까?'라는 불안감을 느낍니다.",
+    "e": "빈곤아동은 경제적 결핍뿐만 아니라 사회 심리적 취약성으로 인해 미래에 대한 불안감이 커서 구체적인 꿈을 가지지 못하거나 목표 설정이 막연한 경우가 많습니다."
+  },
+  {
+    "level": "중",
+    "q": "우리나라 빈곤아동이 직면한 '주거 빈곤'에 해당하지 않는 상황은 무엇인가요? [교재 10장 / 워크북]",
+    "o": [
+      "옥상, 지하, 비닐하우스 등 주택 이외의 공간에 거주함",
+      "가구원 수에 비해 방이 심각하게 부족함",
+      "재래식 화장실을 이용하거나 전용 화장실이 없음",
+      "부모의 선택으로 전세 대신 고가의 월세 아파트에 거주함"
+    ],
+    "a": 3,
+    "h": "주거 빈곤은 최저주거기준에 미달하는 열악한 물리적 환경을 뜻합니다.",
+    "e": "주거 빈곤은 「주거기본법」상 최저주거기준 미달 가구, 지하/옥탑방 거주, 쪽방/고시텔/비닐하우스 거주, 방 부족이나 화장실 미비 등 열악하고 안전하지 않은 환경을 말합니다. 고가의 월세 거주는 주거 빈곤에 해당하지 않습니다."
+  },
+  {
+    "level": "중",
+    "q": "드림스타트 사업의 대상자를 발굴하고 서비스를 제공하는 과정에서 핵심적인 개입 방식은 무엇인가요? [교재 10장 / 워크북]",
+    "o": [
+      "현금 일시불 직접 지급",
+      "전 국민 대상 무상급식 제공",
+      "맞춤형 통합 사례관리",
+      "보편적 무상 의료보험 발급"
+    ],
+    "a": 2,
+    "h": "아동과 가족의 개별적인 욕구를 파악하고 지역 자원을 엮어 맞춤형으로 돕습니다.",
+    "e": "드림스타트는 대상자를 발굴하여 욕구를 분석하고, 지역 내 여러 자원을 연계하여 건강, 보육, 복지 등 맞춤형 '통합 사례관리'를 통해 지속적으로 개입하는 서비스입니다."
+  },
+  {
+    "level": "중",
+    "q": "드림스타트가 아동에게 제공하는 4대 서비스 영역에 포함되지 않는 것은 무엇인가요? [교재 10장 / 워크북]",
+    "o": [
+      "신체·건강",
+      "인지·언어",
+      "주식 투자 및 자산 운용 기법",
+      "정서·행동 및 부모·가족 지원"
+    ],
+    "a": 2,
+    "h": "아동의 전인적 발달을 돕기 위한 기초 영역들로 구성됩니다.",
+    "e": "드림스타트의 맞춤형 서비스 영역은 신체·건강, 인지·언어, 정서·행동, 부모·가족 지원으로 구성되어 있습니다. 주식 투자는 해당하지 않습니다."
+  },
+  {
+    "level": "중",
+    "q": "서울가정위탁지원센터 강귀숙 센터장 인터뷰(현장의 소리)에서 지적한 '오늘날 아동빈곤의 특징'으로 가장 올바른 설명은 무엇인가요? [교재 10장 현장의 소리]",
+    "o": [
+      "옷차림이나 외모만 봐도 빈곤 여부를 즉시 구별할 수 있다.",
+      "스마트폰이나 브랜드 옷 뒤에 가려져 겉으로 잘 드러나지 않는 '은폐된 빈곤'이다.",
+      "정서적 돌봄은 충분하나 오직 금전적인 결핍만이 문제로 나타난다.",
+      "빈곤아동 스스로 자신의 처지를 당당하게 알리고 적극적으로 도움을 요청한다."
+    ],
+    "a": 1,
+    "h": "겉모습은 평범해 보이지만 세심히 살피지 않으면 보이지 않는 결핍이 많습니다.",
+    "e": "강귀숙 센터장은 오늘날의 아동빈곤이 겉으로는 스마트폰이나 브랜드 옷으로 가려져 있어 면밀히 살피지 않으면 알아채기 힘든 '은폐된 빈곤'이며, 돌봄과 정서적 결핍이 심각하다고 지적했습니다."
+  },
+  {
+    "level": "중",
+    "q": "가정위탁보호를 받던 아동이 성인이 되어 자립할 때 겪는 급격한 위기와 빈곤 대물림을 막기 위해 2022년에 개편된 제도의 내용은 무엇인가요? [교재 10장 현장의 소리]",
+    "o": [
+      "만 18세가 되면 예외 없이 강제 퇴소시킨다.",
+      "아동이 원할 경우 만 24세까지 보호 및 지원을 연장할 수 있다.",
+      "자립 정착금을 1억 원으로 일시 지급하고 모든 관리를 종료한다.",
+      "위탁 부모에게 법적 친권과 상속권을 강제로 부여한다."
+    ],
+    "a": 1,
+    "h": "아동이 충분히 자립을 준비할 수 있도록 법적 나이를 상향했습니다.",
+    "e": "2022년 보호 연장 제도가 개편되면서 아동이 연장을 희망할 경우 만 24세까지 위탁가정에서 보호를 받으며 자립수당을 지원받고 구직과 학업을 준비할 수 있게 되었습니다."
+  },
+  {
+    "level": "중",
+    "q": "빈곤아동이 빈곤 사실이 드러나는 것을 피하기 위해 도움을 요청하지 않고 숨기려는 심리적 원인은 무엇인가요? [강의녹음 10강]",
+    "o": [
+      "자신감과 성취감이 극도로 높아서",
+      "국가의 복지 제도를 전적으로 불신해서",
+      "가난으로 인한 낙인감과 수치심을 느끼기 때문에",
+      "도움을 받으면 부모에게 세금이 부과될까 봐"
+    ],
+    "a": 2,
+    "h": "친구들에게 놀림을 받거나 차별받는 것을 두려워합니다.",
+    "e": "아동들은 가난하다는 사실로 인해 비난받거나 놀림의 대상이 되는 낙인감과 수치심을 강하게 느끼기 때문에, 빈곤을 숨기려 하고 정당한 도움조차 요청하지 못하는 경향이 있습니다."
+  },
+  {
+    "level": "중",
+    "q": "빈곤아동의 권리 침해와 관련하여, 아동이 신체적·인지적으로 건강하게 성장할 권리를 뜻하는 아동의 4대 권리 중 하나는 무엇인가요? [강의녹음 10강]",
+    "o": [
+      "발달권",
+      "노동권",
+      "참정권",
+      "소유권"
+    ],
+    "a": 0,
+    "h": "안전하게 성장하고 교육받을 권리입니다.",
+    "e": "아동의 4대 권리는 생존권, 보호권, 발달권, 참여권입니다. 빈곤은 돌봄과 교육의 기회를 박탈하여 아동이 건강하게 성장할 '발달권'을 심각하게 침해합니다."
+  },
+  {
+    "level": "중",
+    "q": "아동빈곤 문제를 해결하기 위해 가장 필요한 사회적 태도로 교재와 워크북에서 공통으로 강조하는 격언은 무엇인가요? [교재 10장 / 워크북]",
+    "o": [
+      "가난은 나라님도 구하지 못한다.",
+      "한 아이를 키우려면 온 마을이 필요하다.",
+      "하늘은 스스로 돕는 자를 돕는다.",
+      "젊어서 고생은 사서도 한다."
+    ],
+    "a": 1,
+    "h": "개인이나 가족의 책임이 아닌, 지역사회와 국가의 공동 책임임을 상징합니다.",
+    "e": "아동빈곤은 부모의 책임으로만 돌릴 수 없는 구조적 문제이므로, 국가와 사회 공동체가 연대하여 돌봄과 복지를 보장해야 한다는 의미로 '한 아이를 키우려면 온 마을이 필요하다'를 강조합니다."
+  },
+  {
+    "level": "중",
+    "q": "최근 우리나라 전체 아동빈곤율 수치가 감소하는 추세를 보인 주요 원인으로 꼽히는 것은 무엇인가요? [교재 10장 / 잠시만요]",
+    "o": [
+      "아동 인구의 급격한 증가",
+      "부모의 사교육비 지출 감소",
+      "근로소득의 상승 및 아동수당 등 공적 이전소득의 확대",
+      "중위소득 산정 기준의 하향 조정"
+    ],
+    "a": 2,
+    "h": "가구의 일해서 번 돈이 늘고, 국가가 현금으로 지원하는 제도가 생겼기 때문입니다.",
+    "e": "우리나라 아동의 상대적 빈곤율은 2015년 이후 감소 추세인데, 이는 아동 가구의 근로소득 상승과 2018년 도입된 아동수당 등 국가의 공적 이전소득이 빈곤 완화에 기여했기 때문입니다."}
+        // 
+    ];
+
+    let curIdx = 0;
+    let wrongCount = 0; // 틀린 횟수 추적 변수
+
+    function loadQuestion() {
+        wrongCount = 0;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    function checkAnswer(idx, btn) {
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+        
+        if (idx === q.a) {
+            // 정답을 맞춘 경우
+            btn.classList.add('correct');
+            allBtns.forEach(b => b.style.pointerEvents = 'none'); // 클릭 방지
+            showExplanation();
+        } else {
+            // 틀린 경우
+            wrongCount++;
+            btn.classList.add('wrong');
+            btn.style.pointerEvents = 'none'; // 틀린 버튼 다시 못 누르게
+            
+            if (wrongCount === 1) {
+                // 첫 번째 틀림: 힌트만 보여줌
+                document.getElementById('hint-text').innerText = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                // 두 번째 틀림: 정답 공개
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                showExplanation();
+            }
+        }
+    }
+
+    function showExplanation() {
+        const q = quizData[curIdx];
+        document.getElementById('exp-text').innerText = q.e;
+        document.getElementById('exp-box').style.display = 'block';
+        document.getElementById('next-btn').style.display = 'block';
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            document.getElementById('quiz-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'block';
+            document.getElementById('result-msg').innerText = "10강 학습을 완료하셨습니다. 수고하셨습니다, 학우님!";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>

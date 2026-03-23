@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>빈곤론 퀴즈 [12강 - 상급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); opacity: 0.6; }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; color: #856404; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .result-btn { width:100%; padding:15px; margin:10px 0; border:1px solid #e2e8f0; border-radius:10px; background:white; cursor:pointer; font-size:1rem; font-weight:bold; transition:0.2s; }
+    .result-btn:hover { background:#f0f4ff; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제12강: 노인과 빈곤 (상급)</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>정답 및 해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <p id="result-msg"></p>
+        <button class="result-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="result-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    /* [노트북LM 데이터]
+       형식: {"level": "상", "q": "질문", "o": ["보기1","보기2","보기3","보기4"], "a": 정답번호, "h": "힌트", "e": "해설"}
+    */
+    const quizData = [
+        {"level": "상", "q": "2025년 기출문제 변형입니다. 한국의 노인빈곤율에 대한 설명으로 올바르지 않은 것은 무엇인가요? [기출문제 2025 12강 / 교재 12장]",
+    "o": [
+      "한국은 OECD 국가 중 노인빈곤율이 압도적으로 가장 높은 국가 중 하나다.",
+      "노인빈곤율은 점차 개선되어 현재 OECD 평균보다 훨씬 낮은 최하위권 수준이다.",
+      "OECD 평균 노인빈곤율(약 14.2%)의 약 3배인 40%를 넘는 심각한 수준이다.",
+      "한국의 심각한 노인빈곤율은 1인 가구 노인과 여성 노인에게서 특히 두드러진다."
+    ],
+    "a": 1,
+    "h": "한국은 최상위권(1위)의 오명을 가지고 있습니다.",
+    "e": "한국의 노인빈곤율은 꾸준히 OECD 1위(최고 수준)를 기록하고 있으며 40%를 상회합니다. 점차 낮아져 최하위권이라는 것은 완전히 반대되는 기출 오답 선지입니다."
+  },
+  {
+    "level": "상",
+    "q": "2025년 기출문제 변형입니다. 한국 사회에서 노인빈곤이 극심하게 나타나는 근본적인 구조적 원인 두 가지를 바르게 짝지은 것은 무엇인가요? [기출문제 2025 12강 / 기출분석]",
+    "o": [
+      "자녀 세대의 과도한 부양비 지급 / 사립 탐정 수요의 증가",
+      "노인들의 과도한 주식 투자 실패 / 사교육비 부담 증가",
+      "노동시장 이중구조(비정규직 양산) / 고령층을 위한 공적이전소득(연금) 부족",
+      "사회수당의 과도한 지급 / 노인들의 일자리 독점 현상"
+    ],
+    "a": 2,
+    "h": "일할 때는 안정적인 직장이 없었고, 늙어서는 나라에서 주는 돈이 없습니다.",
+    "e": "청장년기의 불안정한 일자리(노동시장 이중구조)로 인해 노후 대비(연금 납부)를 하지 못했고, 현재 국가가 보장하는 기초연금 등 공적이전소득마저 턱없이 부족한 것이 노인빈곤의 핵심 원인입니다."
+  },
+  {
+    "level": "상",
+    "q": "2025년 기출문제 변형입니다. 노인 자살률을 높이는 핵심적인 위험 요인 세 가지에 해당하지 않는 것은 무엇인가요? [기출문제 2025 12강 / 기출분석]",
+    "o": [
+      "소득 부족 (절대적 빈곤)",
+      "질병과 건강 악화",
+      "가족 및 사회로부터의 정서적 고립",
+      "자녀와의 안정된 정서적 관계 유지"
+    ],
+    "a": 3,
+    "h": "위험 요인이 아니라 예방(보호) 요인입니다.",
+    "e": "노인 자살의 주요 3대 요인은 경제적 문제(빈곤), 건강 문제(질병), 그리고 외로움(사회적 고립)입니다. 자녀와의 안정된 관계는 자살을 막는 보호 요인이며, 2025 기출에서 이를 오답으로 묻는 문제가 출제되었습니다."
+  },
+  {
+    "level": "상",
+    "q": "2025년 기출문제 변형입니다. 정부의 노인고용정책 중 '공공형 노인 일자리'의 특징으로 적절하지 않은 것은 무엇인가요? [기출문제 2025 12강 / 강의록]",
+    "o": [
+      "초등학교 앞 등하교 교통안전 봉사활동 등에 주로 참여한다.",
+      "독거노인 안부 확인(노노케어) 등 사회적 가치 중심의 공익 활동을 수행한다.",
+      "소규모 매장(실버카페 등)을 창업하여 전문직 수준의 고임금을 창출하는 일자리이다.",
+      "지역사회 내 공익 증진을 목적으로 하며 노인의 자발적 참여를 유도한다."
+    ],
+    "a": 2,
+    "h": "카페를 운영하고 물건을 파는 것은 '시장형' 사업단입니다.",
+    "e": "공공형 일자리는 월 29만 원 수준의 소액 수당을 받으며 교통봉사, 환경정비, 노노케어 등 사회적 가치를 창출하는 자원봉사 성격의 일자리입니다. 실버카페나 전문 직종 운영은 '시장형 사업단' 일자리에 해당합니다."
+  },
+  {
+    "level": "상",
+    "q": "2025년 기출문제 변형입니다. '선배시민'의 개념과 실천적 지향점을 설명한 것으로 가장 거리가 먼 것은 무엇인가요? [기출문제 2025 12강 / 기출분석]",
+    "o": [
+      "자원봉사 활동이나 기초연금 인상 요구 같은 권리 운동에 주체적으로 참여한다.",
+      "지역사회의 다양한 문제 해결에 능동적으로 나선다.",
+      "인간답게 살 권리 등 시민으로서의 정당한 권리를 국가와 사회에 요구한다.",
+      "국가의 정책 지시에만 순응하며, 잔여적 복지의 틀 안에서 수동적으로 보호받는 대상에 머문다."
+    ],
+    "a": 3,
+    "h": "주는 대로 받는 수동적인 늙은이에서 벗어난 적극적 존재입니다.",
+    "e": "선배시민은 연민의 대상이나 수혜자가 아니라, 스스로 공동체를 돌보고 불평등한 사회 구조에 비판적 질문을 던지며 권리를 쟁취하는 참여적 주체입니다. 수동적 보호 대상은 과거의 '늙은이' 담론입니다."
+  },
+  {
+    "level": "상",
+    "q": "강의록 데이터 심화 문제입니다. 노인의 주소득원 중 공적이전소득 비중과 노인빈곤율 간의 상관관계를 통계적으로 비교했을 때 나타나는 현상은 무엇인가요? [강의록 12강]",
+    "o": [
+      "공적이전소득 비중이 높을수록 노인빈곤율도 비례하여 함께 상승한다.",
+      "공적이전소득 비중이 높은 국가일수록 노인빈곤율은 뚜렷하게 낮아지는 반비례 관계를 보인다.",
+      "한국은 공적이전소득 비중이 80%에 달해 노인빈곤율이 0%에 수렴한다.",
+      "공적이전소득과 노인빈곤율은 통계적으로 아무런 상관관계가 없다."
+    ],
+    "a": 1,
+    "h": "국가가 지원을 많이 할수록 가난한 노인이 줄어듭니다.",
+    "e": "OECD 통계 산점도를 보면, 공적이전소득 비중이 높은 국가(프랑스, 덴마크 등)일수록 노인빈곤율이 낮아지는 부(-)의 상관관계가 나타납니다. 반대로 근로소득 비중이 높은 한국 등은 노인빈곤율이 매우 높습니다."
+  },
+  {
+    "level": "상",
+    "q": "오건호 박사 및 관련 시민단체의 주장에 따르면, 2021년 기준 노후 최소생활비(약 124만 원)를 보장하기 위해 국민연금의 소득대체율을 최소 몇 % 수준으로 인상해야 한다고 요구하나요? [강의록 12강]",
+    "o": [
+      "현재 수준인 40%로 영구 고정",
+      "50%로 인상",
+      "80%로 대폭 인상",
+      "100% 완전 대체"
+    ],
+    "a": 1,
+    "h": "기초연금과 합쳤을 때 최소한의 생활이 가능하도록 설계한 수치입니다.",
+    "e": "시민단체들은 가입기간 30년을 가정할 때, 국민연금 소득대체율을 50%로 인상하고 기초연금(월 30만 원)을 합쳐야만 노후 최소생활비(124만 원 수준)를 간신히 맞출 수 있다고 주장하며 소득대체율 인상을 촉구합니다."
+  },
+  {
+    "level": "상",
+    "q": "현장의 소리에서 소준철 작가가 『가난의 문법』 조사를 통해 파악한 재활용품 수집 노인의 실질적인 월 평균 수입(기초연금 제외, 순수 노동소득)은 대략 어느 정도로 추정되었나요? [교재 12장 현장의 소리]",
+    "o": [
+      "월 5만 원 미만",
+      "월 30만~40만 원 정도",
+      "월 150만 원 (최저임금 수준)",
+      "월 300만 원 이상"
+    ],
+    "a": 1,
+    "h": "한 달 내내 고되게 일해도 최저생계비에 한참 못 미치는 적은 돈입니다.",
+    "e": "보건복지부 전수조사와 작가의 현장 분석에 따르면, 폐지 수집 노인들이 기초연금을 제외하고 순수하게 재활용품을 팔아 버는 한 달 노동소득은 대략 30만~40만 원 수준으로, 노동 강도에 비해 매우 낮아 심각한 빈곤 상태임을 알 수 있습니다."
+  },
+  {
+    "level": "상",
+    "q": "소준철 작가가 한국 사회의 빈곤 현상을 미국 이론인 '빈곤의 여성화'를 넘어선 한국적 특성으로 규정하며 사용한 독창적인 용어는 무엇인가요? [교재 12장 현장의 소리]",
+    "o": [
+      "빈곤의 다문화화",
+      "빈곤의 할머니화",
+      "빈곤의 아동화",
+      "빈곤의 청년화"
+    ],
+    "a": 1,
+    "h": "폐지 줍는 노인의 절대다수가 여성 노인이라는 점에 착안한 말입니다.",
+    "e": "작가는 재활용 수집 노인 통계에서 80대 이상 여성의 비율이 압도적으로 높게 나타나는 현상을 보고, 한국 사회에서는 가난이 단순히 여성을 넘어 '노년 여성(할머니)'에게 짙게 고이는 '빈곤의 할머니화'가 진행 중이라고 분석했습니다."
+  },
+  {
+    "level": "상",
+    "q": "소준철 작가는 재활용품 수집이나 무계약 청소 노동 등을 자본주의의 정식 임노동 관계에서 벗어나 있는 '이것'으로 규정했습니다. '이것'은 무엇인가요? [교재 12장 현장의 소리]",
+    "o": [
+      "완전 고용 상태",
+      "미발전한 노동 (자유노동, 비공식 노동)",
+      "고부가가치 지식 노동",
+      "귀족 노조의 특권 노동"
+    ],
+    "a": 1,
+    "h": "정식 근로계약서도 없고, 4대 보험도 적용받지 못하는 사각지대의 노동입니다.",
+    "e": "재활용품 수집은 기업과 노동자 간의 정식 계약 관계가 없는 비공식 노동입니다. 작가는 자본주의가 고도로 발달했음에도 여전히 제도에 포섭되지 않은 이러한 틈새 노동을 '미발전한 노동' 상태로 진단했습니다."
+  },
+  {
+    "level": "상",
+    "q": "현장의 소리 인터뷰에서 제기된 재활용품 수집 노인의 경제적 계층에 대한 오해를 바로잡는 통계적 사실은 무엇인가요? [교재 12장 현장의 소리]",
+    "o": [
+      "100% 전원이 국민기초생활보장 생계급여를 받는 극빈층이다.",
+      "1만 4천 명 모두 강남에 아파트를 소유한 자산가들의 취미 활동이다.",
+      "생활급여 수급자는 약 28%에 불과하며, 나머지 70%는 차상위 계층 등 다양한 경제적 상황에 놓여 있다.",
+      "수집 노인의 90%는 대기업 연금을 수령하는 부유층이다."
+    ],
+    "a": 2,
+    "h": "모두가 수급자는 아니며, 애매한 경계선에서 가난을 버티는 분들이 대다수입니다.",
+    "e": "폐지 줍는 노인들이 모두 극빈층(생계급여 수급자)일 것이라는 통념과 달리, 실제 수급자는 28%에 그쳤습니다. 나머지 대다수는 차상위 계층이거나 제도적 지원을 받지 못해 생계를 위해 거리로 나온 경우입니다."
+  },
+  {
+    "level": "상",
+    "q": "소준철 작가가 노인 일자리 정책과 관련하여 국가가 강제로 노동을 종용하는 대신 보장해야 한다고 강조한 '적정한 삶(적당한 삶)'의 본질적 의미는 무엇인가요? [교재 12장 현장의 소리]",
+    "o": [
+      "국가가 지정한 공장에서 하루 12시간씩 일하는 삶",
+      "노인이 일하고 싶을 때는 일하고, 쉬고 싶을 때는 쉴 수 있는 개인의 '선택'이 보장되는 사회",
+      "모든 노인이 요양원에 강제로 수용되어 관리받는 삶",
+      "은퇴 후 해외 이민을 의무화하는 정책"
+    ],
+    "a": 1,
+    "h": "노동이 강제가 아니라 권리이자 자유여야 한다는 뜻입니다.",
+    "e": "적정한 삶이란 국가의 재정이나 기업의 논리에 노인의 노동력을 억지로 끼워 맞추는 것이 아니라, 노인 개개인의 신체 조건과 욕구에 맞춰 노동과 휴식을 자율적으로 '선택'할 수 있는 사회적 인프라를 의미합니다."
+  },
+  {
+    "level": "상",
+    "q": "한국 연금제도의 구조적 한계를 나타내는 지표로, OECD 주요국 평균(근로소득의 약 20%)과 비교하여 턱없이 낮은 한국의 공적 연금 보험료율(노사 합산)은 2026년 기준 몇 %인가요? [교재 12장 / 워크북]",
+    "o": [
+      "4.5%",
+      "9.5%",
+      "15.0%",
+      "25.5%"
+    ],
+    "a": 1,
+    "h": "근로자와 사용자가 각각 4.75%씩 부담하여 합친 숫자입니다.",
+    "e": "한국의 국민연금 보험료율은 오랫동안 9%에 묶여 있다가 2026년 기준 9.5%(노사 각 4.75%)에 불과합니다. 이는 OECD 평균(약 20%)의 절반도 안 되는 수준으로, 구조적으로 노후소득을 충분히 보장할 수 없는 '적게 내고 적게 받는' 맹점을 지닙니다."
+  },
+  {
+    "level": "상",
+    "q": "기출문제 분석 및 교재 핵심 요약입니다. 과거 '늙은이' 담론에서 '성공한 노인' 담론으로 변했다가, 최근 '선배시민' 담론으로 발전하면서 나타난 위험(빈곤) 원인에 대한 인식 변화는 무엇인가요? [교재 12장 / 기출분석]",
+    "o": [
+      "자연적 노화 -> 자녀의 불효 -> 국가와 사회의 구조적 문제",
+      "신의 징벌 -> 전생의 업보 -> 개인의 노력 부족",
+      "개인의 도덕적 해이 -> 개인의 자기계발 부족 -> 국가와 사회의 구조적 책임",
+      "국가의 책임 -> 기업의 책임 -> 순수한 개인의 탓"
+    ],
+    "a": 2,
+    "h": "성공한 노인은 자기를 탓하지만, 선배시민은 세상을 탓하며 바꿉니다.",
+    "e": "전통적인 '늙은이'나 '성공한 노인' 담론은 빈곤을 숙명이나 개인의 역량(자기계발) 부족으로 보았으나, '선배시민' 담론은 노인빈곤의 원인을 개인의 탓이 아닌 국가와 사회의 불평등한 구조적 문제로 인식합니다."
+  },
+  {
+    "level": "상",
+    "q": "궁극적으로 노인빈곤이 해결되지 못하는 사회 구조적 이유로 교재와 워크북에서 지목한 '세대 간 연대 결렬'이 의미하는 바는 무엇인가요? [교재 12장 / 워크북]",
+    "o": [
+      "자녀 세대가 노인 세대를 상대로 집단 소송을 제기한 현상",
+      "청년들이 국민연금 가입 서명 운동을 벌이는 현상",
+      "사적 부양(자식 농사)이 무너졌음에도, 이를 대체할 공적 부양(사회 농사) 체계에 대한 사회적 합의가 여전히 부족한 현실",
+      "노인들이 청년들의 일자리를 강제로 빼앗기 위해 시위하는 현상"
+    ],
+    "a": 2,
+    "h": "가족이 못 모시면 나라가 모셔야 하는데, 세금 내기를 주저하는 사회 분위기입니다.",
+    "e": "노인빈곤의 핵심 원인은 과거의 자녀 부양 모델이 해체되었으나, 이를 세금과 연금으로 공동 부담하려는 '공적 부양에 대한 사회적 합의(사회 농사)'가 이뤄지지 않아 세대 간 연대가 약화된 데 있습니다."}
+        // 
+    ];
+
+    let curIdx = 0;
+    let wrongCount = 0; // 틀린 횟수 추적 변수
+
+    function loadQuestion() {
+        wrongCount = 0;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    function checkAnswer(idx, btn) {
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+        
+        if (idx === q.a) {
+            // 정답을 맞춘 경우
+            btn.classList.add('correct');
+            allBtns.forEach(b => b.style.pointerEvents = 'none'); // 클릭 방지
+            showExplanation();
+        } else {
+            // 틀린 경우
+            wrongCount++;
+            btn.classList.add('wrong');
+            btn.style.pointerEvents = 'none'; // 틀린 버튼 다시 못 누르게
+            
+            if (wrongCount === 1) {
+                // 첫 번째 틀림: 힌트만 보여줌
+                document.getElementById('hint-text').innerText = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                // 두 번째 틀림: 정답 공개
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                showExplanation();
+            }
+        }
+    }
+
+    function showExplanation() {
+        const q = quizData[curIdx];
+        document.getElementById('exp-text').innerText = q.e;
+        document.getElementById('exp-box').style.display = 'block';
+        document.getElementById('next-btn').style.display = 'block';
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            document.getElementById('quiz-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'block';
+            document.getElementById('result-msg').innerText = "12강 학습을 완료하셨습니다. 수고하셨습니다, 학우님!";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>

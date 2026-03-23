@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>빈곤론 퀴즈 [14강 - 상급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); opacity: 0.6; }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; color: #856404; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .result-btn { width:100%; padding:15px; margin:10px 0; border:1px solid #e2e8f0; border-radius:10px; background:white; cursor:pointer; font-size:1rem; font-weight:bold; transition:0.2s; }
+    .result-btn:hover { background:#f0f4ff; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제14강: 장애와 빈곤</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>정답 및 해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <p id="result-msg"></p>
+        <button class="result-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="result-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    /* [노트북LM 데이터]
+       형식: {"level": "상", "q": "질문", "o": ["보기1","보기2","보기3","보기4"], "a": 정답번호, "h": "힌트", "e": "해설"}
+    */
+    const quizData = [
+        {"level": "상", "q": "2025년 기출문제 변형입니다. 산업자본주의가 발달하면서 장애인에게 미친 영향에 대한 분석으로 가장 올바른 것은 무엇인가요? [기출문제 2025 14강 / 교재 14장]",
+    "o": [
+      "신체적 속도에 맞춘 노동이 가능해져 장애인의 노동 참여 기회가 급증하였다.",
+      "기계 중심의 생산 방식과 효율성 추구 논리로 인해, 기계 속도를 맞출 수 없는 장애인들이 경제활동에서 철저히 소외되고 배제되었다.",
+      "장애인을 위한 특별 공장들이 대규모로 설립되어 소득 불평등이 완전히 해소되었다.",
+      "농업 기술의 발전으로 장애인이 모두 부농으로 성장할 수 있는 기틀을 마련했다."
+    ],
+    "a": 1,
+    "h": "기계 부품처럼 일해야 하는 공장 시스템은 신체 손상이 있는 이들을 밀어냈습니다.",
+    "e": "산업자본주의 이전에는 인간 몸에 일을 맞췄으나, 공장제 기계 공업 등장 이후 기계 속도에 노동을 맞춰야 하는 효율성·생산성 중심 구조가 되면서 장애인은 노동시장에서 배제되고 빈곤으로 내몰렸습니다."
+  },
+  {
+    "level": "상",
+    "q": "2025년 기출문제 변형입니다. 사회적 장애 모델의 관점을 정확하게 설명하지 않은 것은 무엇인가요? [기출문제 2025 14강 / 교재 14장]",
+    "o": [
+      "신체적 '손상' 자체를 탓하기보다 이를 장애로 만드는 사회적 환경과 장벽을 비판한다.",
+      "장애 문제는 차별적 제도, 편견 등의 사회적 개선을 통해 해결될 수 있다.",
+      "전문가의 의학적 진단과 수술, 집중적인 재활만이 장애 문제를 해결하는 유일한 열쇠라고 간주한다.",
+      "장애 당사자의 목소리를 중시하는 당사자주의와 차이의 정치를 지향한다."
+    ],
+    "a": 2,
+    "h": "치료와 수술을 강조하는 것은 병원(의료) 중심의 관점입니다.",
+    "e": "의학적 진단과 재활, 개인의 적응을 강조하는 것은 '개인적(의료적) 장애 모델'입니다. 사회적 모델은 사회의 태도, 환경, 제도를 고치는 구조적 접근을 취합니다."
+  },
+  {
+    "level": "상",
+    "q": "2025년 기출문제 변형입니다. 장애인의 '자립' 개념에 대한 사회적 모델 및 장애인 운동 진영의 주장으로 가장 부적절한 것은 무엇인가요? [기출문제 2025 14강 / 기출분석]",
+    "o": [
+      "자립은 타인의 도움을 전혀 받지 않고 오롯이 혼자서 모든 것을 해내는 상태를 의미한다.",
+      "자립은 적절한 사회적 자원에 '의존'하면서 스스로 자기 삶을 결정하고 통제하는 권리이다.",
+      "의존할 수 있는 다양한 인프라와 자원이 많아질수록 인간은 더욱 자립적이게 된다.",
+      "자립의 반대말은 단순한 도움이 아니라, 선택권이 박탈된 '종속' 상태이다."
+    ],
+    "a": 0,
+    "h": "누구의 도움도 받지 않는 사람은 세상에 없습니다.",
+    "e": "사회적 모델에서 자립은 '혼자서 다 해내는 홀로서기(능력)'가 아니라, 필요한 도움(상호 의존)을 적절히 받으면서 자신의 삶을 통제하고 선택하는 '자기결정권'의 실현을 의미합니다. 기출문제에서 3번 선지로 출제된 오답 유형입니다."
+  },
+  {
+    "level": "상",
+    "q": "2025년 기출문제 변형입니다. 장애인을 돌보는 가족 구성원이 극심한 빈곤에 빠지게 되는 원인에 대한 설명으로 가장 거리가 먼 것은 무엇인가요? [기출문제 2025 14강 / 기출분석]",
+    "o": [
+      "장애 가족을 돌보느라 유급 노동시장에 참여할 시간을 확보하기 어렵다.",
+      "돌봄으로 인해 직장 내 승진이나 경력 유지 기회를 박탈당해 저임금 파트타임으로 내몰린다.",
+      "가족 돌봄을 수행하면 국가에서 대기업 임원 수준의 고액 수당을 즉시 지급하여 일을 할 필요가 없어지기 때문이다.",
+      "치료와 간병 등 장애로 인한 추가 지출이 겹쳐 가구 전체의 경제적 부담이 가중된다."
+    ],
+    "a": 2,
+    "h": "국가의 지원은 현실적으로 매우 부족합니다.",
+    "e": "돌봄 가족의 빈곤은 유급 노동시간 부족과 경력단절, 치료비 지출 가중 등 구조적 제약에서 옵니다. 국가에서 고액 수당을 주어 일을 안 해도 된다는 것은 사실과 다른 기출 오답 선지입니다."
+  },
+  {
+    "level": "상",
+    "q": "2025년 기출문제 변형입니다. 다음 중 사회적 장애 모델의 입장에서 수립할 빈곤 및 차별 대응 정책의 방향으로 가장 적절한 것은 무엇인가요? [기출문제 2025 14강 / 워크북]",
+    "o": [
+      "장애를 개인의 질병으로 보고 병원 수용 기간을 늘리는 데 예산을 집중한다.",
+      "장애인이 비장애인처럼 걷거나 행동할 수 있도록 물리치료 횟수만 대폭 늘린다.",
+      "장애인이 지역사회에서 배제되지 않고 동등하게 일하고 살 수 있도록 이동권, 교육권, 고용 환경 등 사회 구조를 개선한다.",
+      "가족들에게 장애인의 평생 부양 각서를 의무적으로 쓰게 하여 국가 책임을 덜어낸다."
+    ],
+    "a": 2,
+    "h": "사회가 만든 턱을 없애고, 버스를 탈 수 있게 만드는 것이 사회적 모델의 정책입니다.",
+    "e": "사회적 장애 모델의 정책 대응은 치료가 아니라, 장애인이 비장애인과 동일하게 참여할 수 있도록 물리적 장벽(이동권)과 사회적 환경, 고용 구조 등의 '사회 개조'에 초점을 맞춥니다."
+  },
+  {
+    "level": "상",
+    "q": "기출문제 분석 및 심화 내용입니다. 김도현 활동가가 주장한 '연립(然立, 함께 서기)'의 개념적 바탕이 되는 인간과 자본주의에 대한 철학적 비판은 무엇인가요? [교재 14장 / 기출분석]",
+    "o": [
+      "인간은 원래 혼자 살아가는 고립된 존재인데, 복지제도가 억지로 사람들을 엮고 있다.",
+      "인간은 본디 상호 기대어 사는 의존적 존재이나, 자본주의가 화폐 교환을 매개로 한 원자화된 개인만을 정상으로 간주하여 '의존'을 부정적으로 낙인화하였다.",
+      "자본주의는 너무 많은 복지를 제공하여 사람들을 국가에만 의존하는 나태한 기생충으로 전락시켰다.",
+      "장애인은 다른 인간과 달리 태생적으로 타인에게 피해를 주는 존재이므로 격리가 답이다."
+    ],
+    "a": 1,
+    "h": "자본주의는 돈으로 주고받는 깔끔한 거래만을 정상으로 치고, 무상으로 돌보는 상호의존을 깎아내렸습니다.",
+    "e": "김도현 활동가는 인간 본연의 모습은 상호 의존하는 '연립'임에도 불구하고, 근대 자본주의가 기브 앤 테이크의 화폐 교환만을 정상적 관계로 보아 의존을 낙인화하고 원자화된 자립만을 강요했다고 비판합니다."
+  },
+  {
+    "level": "상",
+    "q": "영국의 근로증진수당(Working Tax Credit)의 한계점과 관련된 노동시장 이중구조 논의 중, 고용주 측면에서 발생하는 부정적 역효과를 가장 잘 설명한 것은 무엇인가요? [교재 14장 / 기출분석]",
+    "o": [
+      "장애인의 능력이 과대평가되어 고용주가 파산한다.",
+      "보조금 덕분에 고용주는 굳이 장애인 노동자의 임금을 인상하거나 처우를 개선할 동기를 잃고, 저임금 일자리에만 장애인을 가두는 결과(빈곤의 구조화)를 낳는다.",
+      "고용주가 장애인에게만 최저임금의 3배를 강제로 지급해야 하므로 신규 채용이 마비된다.",
+      "수당 지급으로 인해 장애인들이 모두 창업을 선언하여 직원이 없어진다."
+    ],
+    "a": 1,
+    "h": "국가가 모자란 월급을 채워주니, 사장은 월급을 올려줄 필요성을 못 느낍니다.",
+    "e": "근로수당 제도는 고용 장려 효과도 있지만, 고용주가 국가의 보조금을 핑계로 임금을 억제하여 장애인을 2차 노동시장(저임금)에 머물게 하는 부작용을 낳아 빈곤을 고착화한다는 비판을 받습니다."
+  },
+  {
+    "level": "상",
+    "q": "현장의 소리에서 문애린 활동가가 사회복지 전공자들에게 요구한 핵심적인 사회복지사의 역할과 태도는 무엇인가요? [교재 14장 현장의 소리]",
+    "o": [
+      "대상자에게 시혜적으로 식료품과 서비스를 배달하는 단순 행정 요원에 머물러야 한다.",
+      "장애인을 불쌍한 수혜자로 취급하지 말고 동등한 권리 주체로 보며, 사회 구조를 바꾸기 위해 당사자와 연대하는 '권익 옹호자(Advocate)'의 역할을 해야 한다.",
+      "어떤 시위나 불법적 요구에도 눈 감고 국가 정책 지침만 기계적으로 수호해야 한다.",
+      "가족들에게 장애인 부양의 도덕적 의무를 철저히 교육시켜 시설 수용을 막아야 한다."
+    ],
+    "a": 1,
+    "h": "불쌍한 사람을 돕는 것을 넘어, 불평등한 세상을 바꾸는 동반자가 되어달라는 당부입니다.",
+    "e": "문애린 활동가는 사회복지사가 단순히 서비스 제공자에 머물지 않고, 권리에서 배제된 당사자들과 함께 현장에서 손잡고 사회 구조적 변화를 이끌어내는 적극적인 옹호자가 되어줄 것을 당부했습니다."
+  },
+  {
+    "level": "상",
+    "q": "장애인 가구의 소득 불평등 실태를 단적으로 보여주는 통계 지표 분석으로 옳은 것은? [교재 14장 / 강의록]",
+    "o": [
+      "장애인 가구의 지니계수는 전체 가구 지니계수보다 지속적으로 낮아 평등한 상태를 유지하고 있다.",
+      "장애인의 월평균 소득은 전국 평균보다 180만 원가량 낮으며, 지니계수 역시 2018~2022년 내내 전체 인구보다 높게 나타나 심각한 소득 양극화를 겪고 있다.",
+      "모든 장애인이 동일한 액수의 기초연금을 받아 지니계수가 '0'에 수렴한다.",
+      "비장애인의 지니계수가 0.9에 달해 국가 위기 상황이나, 장애인은 0.1로 안정적이다."
+    ],
+    "a": 1,
+    "h": "지니계수가 1에 가까울수록 불평등합니다. 장애인 지니계수가 더 큽니다.",
+    "e": "장애인의 월 소득은 전국 평균보다 크게 떨어지며, 장애인 집단 내부의 지니계수(0.37~0.39대)도 전체 인구 지니계수(0.32~0.34대)보다 일관되게 높아 소득 불평등이 더 심각함을 알 수 있습니다."
+  },
+  {
+    "level": "상",
+    "q": "사회적 장애 모델에서 중요시하는 '당사자주의(Nothing about us without us)'의 정책적 의미로 가장 알맞은 것은 무엇인가요? [교재 14장 / 워크북]",
+    "o": [
+      "장애인 정책은 오로지 의료 전문가와 행정 관료의 지식만으로 하향식 결정되어야 한다.",
+      "장애와 관련된 모든 정책, 권리 주장, 서비스 설계 과정에 장애인 당사자의 목소리와 주도적 참여가 필수적으로 보장되어야 한다.",
+      "비장애인 당사자들이 장애인의 세금을 대신 납부해주는 운동이다.",
+      "장애인 당사자들끼리만 모여 독립된 국가를 세우자는 분리주의 사상이다."
+    ],
+    "a": 1,
+    "h": "\"우리를 빼놓고 우리에 관해 이야기하지 말라\"는 슬로건을 떠올려보세요.",
+    "e": "사회적 장애 모델에서 파생된 당사자주의는 전문가 중심주의(의료적 모델)를 배격하고, 차별과 배제의 피해자인 장애인 당사자가 직접 자신의 권리를 쟁취하고 정책에 참여해야 함을 강조합니다."
+  },
+  {
+    "level": "상",
+    "q": "개인적 장애 모델과 사회적 장애 모델의 대립되는 입장을 설명할 때, 빈칸 (A)와 (B)에 들어갈 개념으로 바르게 짝지어진 것은?\n[개인적 모델은 주체를 ( A ) 존재로 보며 개별화된 자립을 강조하는 반면, 사회적 모델은 주체를 ( B ) 존재로 보아 상호 의존과 동반자 관계를 강조한다.] [강의록 14강]",
+    "o": [
+      "(A) 관계론적 - (B) 실체론적",
+      "(A) 실체적(본질론적) - (B) 체현된 관계론적",
+      "(A) 환경적 - (B) 유전적",
+      "(A) 집단적 - (B) 원자적"
+    ],
+    "a": 1,
+    "h": "개인적 모델은 인간을 딱 떨어진 한 덩어리(본질)로 보고, 사회적 모델은 얽히고설킨 관계 속의 존재로 봅니다.",
+    "e": "강의록에 따르면 개인적 모델은 주체를 실체적·본질론적 존재로 보아 자립과 의존을 이분법적으로 분리(홀로서기 강조)하지만, 사회적 모델은 주체를 맥락과 관계에 묻어 들어간 '관계론적' 존재로 보아 상호 의존성을 강조합니다."
+  },
+  {
+    "level": "상",
+    "q": "장애인 고용 확대를 위한 다각적 접근 중, 단순한 현금 급여(수당) 제공의 한계를 극복하기 위해 교재에서 제안하는 '구조적 노동시장 개입' 방안으로 부적절한 것은 무엇인가요? [교재 14장 / 워크북]",
+    "o": [
+      "직업 재활 시설 확충과 맞춤형 직업훈련 제공",
+      "사회적 일자리(권리중심 공공일자리 등) 적극 창출",
+      "자영업 및 창업을 위한 인프라와 자금 지원 연계",
+      "장애인들에게만 최저임금 적용을 영구적으로 배제하여 무급 노동 자원봉사를 강제"
+    ],
+    "a": 3,
+    "h": "노동의 대가를 정당하게 지불하지 않는 것은 오히려 빈곤을 악화시킵니다.",
+    "e": "장애인 빈곤의 근본 해결을 위해서는 수당뿐 아니라 고용 기회(직업훈련, 사회적 일자리 창출, 자영업 지원)가 함께 보장되어야 합니다. 최저임금 배제나 무급 노동 강제는 노동권 침해이자 빈곤의 악순환입니다."
+  },
+  {
+    "level": "상",
+    "q": "다음 중 개념 간의 연결이 가장 어색한 것은 무엇인가요? [교재 14장 / 강의록 종합]",
+    "o": [
+      "사회적 장애 모델 - 환경과 제도의 변화 요구",
+      "의료적 장애 모델 - 전문가 주도의 치료와 재활",
+      "종속(Subordination) - 선택권 상실과 제한된 의존 대상",
+      "연립(然立) - 개별화되고 파편화된 원자적 홀로서기"
+    ],
+    "a": 3,
+    "h": "연립은 함께 기대고 선다는 뜻입니다.",
+    "e": "김도현 활동가가 제시한 '연립(함께 서기)'은 상호 의존하며 연대하는 인간의 자연스러운 관계망을 회복하자는 가치입니다. 파편화된 원자적 홀로서기는 자본주의가 강요한 낡은 자립의 개념입니다."
+  },
+  {
+    "level": "상",
+    "q": "장애인의 자립 생활을 지원하기 위해 도입된 '활동지원서비스' 제도가 지닌 한계로 현장에서 가장 크게 지적받는 문제점은 무엇인가요? (문애린 활동가 인터뷰 참고) [교재 14장 현장의 소리]",
+    "o": [
+      "서비스 신청 절차가 너무 간소하여 사기꾼들이 남용하고 있다.",
+      "기재부의 예산 통제로 인해 중증장애인의 생명과 직결된 24시간 지원이 충분히 보장되지 않고 제한된 시간만 허락된다.",
+      "활동보조인들이 모두 외국인으로 대체되어 심각한 언어 소통 불가가 발생했다.",
+      "서비스 이용 시 장애인에게 100% 자부담을 강요하여 이용자가 전무하다."
+    ],
+    "a": 1,
+    "h": "국가가 예산을 핑계로 돌봄의 '시간'을 끊어버립니다.",
+    "e": "문애린 활동가는 중증장애인에게 생명과도 같은 활동지원서비스가 기재부의 예산 통제 논리 때문에 필요한 24시간이 온전히 보장되지 않고, 국가가 정해놓은 부족한 시간 안에서만 연명하듯 살아야 하는 한계를 지적했습니다."
+  },
+  {
+    "level": "상",
+    "q": "장애와 노동의 역사적 변천에 관한 서술 중 올바른 것을 고르시오. [교재 14장 / 강의녹음]",
+    "o": [
+      "조선 시대 허조의 사례에서 보듯 과거에는 장애를 도덕적 죄악으로 여겨 어떠한 관직 진출도 법으로 금지하였다.",
+      "현대 산업자본주의는 기계의 발전으로 힘든 노동이 사라져 장애인의 노동시장 진입 장벽을 완전히 허물었다.",
+      "근대 이전 농경 사회에서는 인간의 생체 리듬과 속도에 맞춰 노동을 수행할 수 있어 장애인도 사회적 생산에 유의미하게 참여할 여지가 존재했다.",
+      "고려 시대에는 늙은 장애인을 부양하는 자를 사형에 처하는 가혹한 법률이 있었다."
+    ],
+    "a": 2,
+    "h": "기계가 중심이 되기 전에는 자기 몸에 맞게 일할 수 있었습니다.",
+    "e": "과거 전근대 사회에서는 노동이 인간의 몸과 속도에 맞춰져 있어 장애인(허조 등)도 직업과 관직을 가질 수 있었으나, 산업자본주의 이후 기계 중심의 획일적 속도로 노동이 재편되면서 장애인이 노동 과정에서 배제되었습니다."}
+        // 
+    ];
+
+    let curIdx = 0;
+    let wrongCount = 0; // 틀린 횟수 추적 변수
+
+    function loadQuestion() {
+        wrongCount = 0;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    function checkAnswer(idx, btn) {
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+        
+        if (idx === q.a) {
+            // 정답을 맞춘 경우
+            btn.classList.add('correct');
+            allBtns.forEach(b => b.style.pointerEvents = 'none'); // 클릭 방지
+            showExplanation();
+        } else {
+            // 틀린 경우
+            wrongCount++;
+            btn.classList.add('wrong');
+            btn.style.pointerEvents = 'none'; // 틀린 버튼 다시 못 누르게
+            
+            if (wrongCount === 1) {
+                // 첫 번째 틀림: 힌트만 보여줌
+                document.getElementById('hint-text').innerText = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                // 두 번째 틀림: 정답 공개
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                showExplanation();
+            }
+        }
+    }
+
+    function showExplanation() {
+        const q = quizData[curIdx];
+        document.getElementById('exp-text').innerText = q.e;
+        document.getElementById('exp-box').style.display = 'block';
+        document.getElementById('next-btn').style.display = 'block';
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            document.getElementById('quiz-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'block';
+            document.getElementById('result-msg').innerText = "14강 학습을 완료하셨습니다. 수고하셨습니다, 학우님!";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>

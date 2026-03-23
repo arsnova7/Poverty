@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>빈곤론 퀴즈 [11강 - 중급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); opacity: 0.6; }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; color: #856404; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .result-btn { width:100%; padding:15px; margin:10px 0; border:1px solid #e2e8f0; border-radius:10px; background:white; cursor:pointer; font-size:1rem; font-weight:bold; transition:0.2s; }
+    .result-btn:hover { background:#f0f4ff; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제11강: 여성과 빈곤 (중급)</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>정답 및 해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <p id="result-msg"></p>
+        <button class="result-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="result-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    /* [노트북LM 데이터]
+       형식: {"level": "중", "q": "질문", "o": ["보기1","보기2","보기3","보기4"], "a": 정답번호, "h": "힌트", "e": "해설"}
+    */
+    const quizData = [
+        {"level": "중", "q": "폴 스피커(Paul Spicker)가 정의한 '빈곤의 여성화' 개념의 핵심은 무엇인가요? [교재 11장 / 워크북]",
+    "o": [
+      "모든 연령대에서 여성이 남성보다 빈곤율이 압도적으로 높은 현상이다.",
+      "여성 가장 가구가 남성 가장 가구의 소득을 초월하는 현상이다.",
+      "경제 침체와 공공 지출 축소에 따라 전 세계 빈곤층에서 여성이 차지하는 비율이 점차 높아지는 현상이다.",
+      "가부장제 철폐로 인해 여성의 경제 참여가 급격히 늘어나는 현상이다."
+    ],
+    "a": 2,
+    "h": "국가의 복지가 줄어들고 경제가 어려워질 때 피해가 여성에게 집중되는 현상을 말했습니다.",
+    "e": "스피커는 경제 위기와 복지 예산 축소 상황에서 빈곤층 내 여성의 비중이 점점 증가하는 구조적 현상을 빈곤의 여성화라고 명명했습니다. (모든 연령대 강조는 아이첸의 정의입니다.)"
+  },
+  {
+    "level": "중",
+    "q": "와카바야시와 도나토의 연구에 따르면, 젊은 시절 주당 20시간 이상 부모를 돌본 여성은 8년 후 빈곤 상태에 처할 확률이 얼마나 높아졌나요? [교재 11장 / 강의록]",
+    "o": [
+      "5% 더 높다.",
+      "10% 더 높다.",
+      "25% 더 높다.",
+      "50% 더 높다."
+    ],
+    "a": 2,
+    "h": "돌봄이 여성의 빈곤 가능성을 1/4 이상 끌어올립니다.",
+    "e": "연구에 따르면 주당 20시간 이상 돌봄을 제공한 여성은 8년 후 빈곤 확률이 25%, 공공부조 수급 확률이 27%, 의료부조 수급 확률이 40% 더 높아지는 등 이중의 취약성을 보였습니다."
+  },
+  {
+    "level": "중",
+    "q": "이혼과 빈곤의 관계에 대한 설명으로 올바른 것은 무엇인가요? [교재 11장 / 워크북]",
+    "o": [
+      "이혼 후 여성은 위자료로 인해 남성보다 경제적으로 훨씬 여유로워진다.",
+      "여성이 노동시장에 참여하면 이혼으로 인한 소득 손실을 완벽히 메울 수 있다.",
+      "가부장적 임금 구조 하에서 이혼은 여성빈곤 위험을 급격히 높이는 결정적 계기가 된다.",
+      "영국과 미국에서는 빈곤한 모자가족 중 이혼 여성의 비율이 가장 낮게 나타난다."
+    ],
+    "a": 2,
+    "h": "남성 중심의 소득 체계에서 남성과의 관계 단절은 곧 경제적 추락을 의미합니다.",
+    "e": "여성의 일자리는 저임금에 집중되어 있어 이혼 후 여성 혼자 노동시장에 참여하더라도 소득 손실을 메우기 어렵습니다. 미국, 영국, 네덜란드 등지에서도 이혼한 여성 가구가 빈곤 모자가족의 다수를 차지합니다."
+  },
+  {
+    "level": "중",
+    "q": "여성이 노동시장에서 차별을 겪으며 국민연금과 같은 사회보장제도에서 불리해지는 주된 이유는 직장가입자가 아닌 어떤 지위로 분류되는 경우가 많기 때문인가요? [교재 11장 / 워크북]",
+    "o": [
+      "당연가입자",
+      "임의가입자",
+      "지역가입자 1등급",
+      "특수고용직"
+    ],
+    "a": 1,
+    "h": "의무가 아닌 본인의 선택에 의해 가입해야 하는 지위입니다.",
+    "e": "경력 단절과 파트타임 노동으로 인해 많은 여성이 직장가입자의 지위를 갖지 못하고 전업주부로서 '임의가입자'로 분류되어 보험료 납부가 중단되거나 낮게 책정되어 노후 연금 수령액이 매우 적어집니다."
+  },
+  {
+    "level": "중",
+    "q": "한국의 성별 임금 격차(남성 대비 여성 임금 비율) 실태에 대한 설명으로 알맞은 것은 무엇인가요? [교재 11장 / 강의록]",
+    "o": [
+      "격차가 거의 해소되어 OECD 내에서 가장 낮은 1.9% 수준을 유지하고 있다.",
+      "여성이 오히려 남성보다 10% 더 많은 임금을 받고 있다.",
+      "여전히 약 30%에 달하는 높은 격차를 보이며 주요국 중 최하위권에 머물러 있다.",
+      "임금 격차는 심각하지만, 승진에 있어서는 완벽한 성비 균형을 이뤘다."
+    ],
+    "a": 2,
+    "h": "우리나라는 여성 임금이 남성의 60% 후반대 수준에 불과합니다.",
+    "e": "OECD 통계에 따르면 한국의 성별 소득 격차는 약 30%를 상회(여성 임금이 남성의 약 66% 수준)하여 비교 국가 중 임금 불평등이 가장 심각한 수준으로 나타났습니다."
+  },
+  {
+    "level": "중",
+    "q": "2024년 주요국 '성 격차 지수(Gender Gap Index)'에서 한국의 순위와 북유럽 국가들의 순위를 바르게 비교한 것은 무엇인가요? [교재 11장 / 강의록]",
+    "o": [
+      "한국 1위, 아이슬란드 94위",
+      "한국 15위, 핀란드 50위",
+      "한국 50위, 스웨덴 90위",
+      "한국 94위, 아이슬란드 1위"
+    ],
+    "a": 3,
+    "h": "우리나라는 조사 대상국 중 하위권에 머물러 있습니다.",
+    "e": "2024년 성 격차 지수에서 아이슬란드, 핀란드, 노르웨이 등 북유럽 국가들이 최상위권을 차지한 반면, 한국은 94위에 머물러 성평등 수준이 여전히 열악함을 보여줍니다."
+  },
+  {
+    "level": "중",
+    "q": "한국의 여성 노인(65세 이상) 빈곤율은 남성 노인 빈곤율(약 30.7%)과 비교했을 때 대략 어느 정도 수준인가요? [교재 11장 / 강의록]",
+    "o": [
+      "남성보다 현저히 낮아 10% 수준이다.",
+      "남성과 동일한 30% 수준이다.",
+      "남성보다 두 배 이상 높은 65.1% 수준이다.",
+      "남성보다 약간 높은 35% 수준이다."
+    ],
+    "a": 2,
+    "h": "여성 노인의 빈곤은 남성 노인의 배 이상으로 극심합니다.",
+    "e": "세대별 빈곤율을 비교하면 노년층에서 성별 격차가 가장 극심하게 벌어져, 남성 빈곤율이 약 30%대인 반면 여성 노인 빈곤율은 65%를 상회하여 두 배 이상의 심각한 차이를 보입니다."
+  },
+  {
+    "level": "중",
+    "q": "한부모가족, 특히 여성 한부모가족의 빈곤 실태를 보여주는 경제적 지표로 가장 올바른 설명은 무엇인가요? [교재 11장 / 강의록]",
+    "o": [
+      "한부모가족의 평균 순자산은 전체 가구 순자산과 동일하다.",
+      "여성 한부모가족의 월평균 소득은 전체 가구 소득을 상회한다.",
+      "한부모가족의 평균 순자산은 전체 가구 평균 순자산의 약 4분의 1 수준에 불과하다.",
+      "한부모가족 여성은 양육 의무 면제로 인해 근로소득이 극대화된다."
+    ],
+    "a": 2,
+    "h": "혼자 생계와 육아를 책임져야 하므로 자산 형성이 매우 어렵습니다.",
+    "e": "2024년 통계에 따르면 한부모가족의 평균 순자산은 약 1억 1천만 원으로 전체 가구(약 4억 4천만 원)의 1/4 수준이며, 월평균 소득도 절반 수준에 그쳐 경제적 취약성이 심각합니다."
+  },
+  {
+    "level": "중",
+    "q": "성평등의 여러 관점 중, 자본주의의 상품화 구조와 계급 불평등을 여성빈곤의 핵심 원인으로 보고 '계급 해방'을 대안으로 제시하는 관점은 무엇인가요? [교재 11장 / 워크북]",
+    "o": [
+      "자유주의적 관점",
+      "마르크스주의적 관점",
+      "급진주의적 관점",
+      "사회주의적 관점"
+    ],
+    "a": 1,
+    "h": "자본주의 체제 자체의 모순에 집중하는 사상입니다.",
+    "e": "마르크스주의적 관점은 여성 억압을 자본주의의 계급 구조와 결부시켜 보며, 여성 내부의 계급 분화를 해결하기 위해 자본주의의 계급 해방이 선행되어야 한다고 주장합니다."
+  },
+  {
+    "level": "중",
+    "q": "여성 억압의 원인을 가부장제와 자본주의가 결합한 '성별 분업(가족임금 체제)'으로 규정하고, 이 두 체제를 동시에 극복해야 한다고 주장하는 관점은 무엇인가요? [교재 11장 / 워크북]",
+    "o": [
+      "자유주의적 관점",
+      "마르크스주의적 관점",
+      "급진주의적 관점",
+      "사회주의적 관점"
+    ],
+    "a": 3,
+    "h": "자본주의 비판과 가부장제 비판을 융합한 시각입니다.",
+    "e": "사회주의적 페미니즘 관점은 마르크스주의(자본주의 비판)와 급진주의(가부장제 비판)를 통합하여, 자본주의와 가부장제의 상호 결합(성별 분업)을 타파해야 빈곤 문제가 해결된다고 봅니다."
+  },
+  {
+    "level": "중",
+    "q": "복지국가 모델 중 '국민의 집(스웨덴 등)'이 여성빈곤 완화를 위해 취하는 정책적 방향과 가장 일치하는 것은 무엇인가요? [교재 11장 / 강의록]",
+    "o": [
+      "기회의 평등만을 강조하며 시장 탈락자에게 선별적 사회수당만 지급한다.",
+      "남성 생계부양자 중심의 사회보험 제도를 강력히 유지한다.",
+      "보편적 복지와 적극적 노동시장 정책을 통해 돌봄을 사회화하고 성평등 문화를 정착시킨다.",
+      "여성을 가정 내 가사노동에 전념하도록 현금 지원을 극대화한다."
+    ],
+    "a": 2,
+    "h": "육아휴직 확대, 라테파파, 돌봄의 국가 책임 등이 키워드입니다.",
+    "e": "국민의 집 모델(사민주의)은 보편적 복지와 아동 돌봄의 사회화, 남성의 육아휴직 확대 등을 통해 성평등한 가족 형태를 지원하고 여성의 노동시장 진출을 적극 돕습니다."
+  },
+  {
+    "level": "중",
+    "q": "복지국가 모델 중 '경쟁과 연민의 집(신자유주의)' 체제에서 돌봄을 전담하는 여성 한부모 가족이 빈곤을 구제받는 주요 방식은 무엇인가요? [교재 11장 / 워크북]",
+    "o": [
+      "보편적 무상 의료와 무상 보육",
+      "노동시장 적극 개입을 통한 동일임금 보장",
+      "자격 심사(근로 능력 등)를 거친 선별적 복지 및 사회수당 지급",
+      "전 국민 기본소득 지급"
+    ],
+    "a": 2,
+    "h": "시장에서 탈락한 사람에게 최소한의 연민으로 조건을 따져 지원합니다.",
+    "e": "경쟁과 연민의 집에서는 시장 경쟁을 원칙으로 하되, 탈락자나 노동이 힘든 한부모 여성 등에게는 '연민'의 기준에 부합하는지 엄격히 심사하여 선별적 복지(잔여적 복지)를 제공합니다."
+  },
+  {
+    "level": "중",
+    "q": "조합주의 복지국가인 '온정적 아버지의 집(독일 등)' 체제가 여성빈곤 문제 해결에 한계를 보이는 주된 이유는 무엇인가요? [교재 11장 / 워크북]",
+    "o": [
+      "여성에게 남성보다 과도하게 많은 연금을 지급하여 재정이 고갈되기 때문이다.",
+      "전형적인 4인 핵가족과 남성 가장 중심의 '가족임금'을 전제로 사회보험이 설계되어 있기 때문이다.",
+      "국가가 모든 아동 돌봄을 강제적으로 사회화하여 가족 해체를 유발했기 때문이다.",
+      "어떤 복지 혜택도 제공하지 않는 완전한 자유방임 체제이기 때문이다."
+    ],
+    "a": 1,
+    "h": "가부장적 가족 구조를 정상 가족으로 고착화하는 제도입니다.",
+    "e": "온정적 아버지의 집은 남성이 가족을 부양하는 것을 전제로 한 사회보험 구조이므로, 직업 지위에 따른 계층 격차가 유지되고 노동시장에서 배제된 돌봄 여성은 혜택을 받기 어려워 성불평등을 고착화합니다."
+  },
+  {
+    "level": "중",
+    "q": "여성이 돌봄을 제공함으로써 겪게 되는 노동시장에서의 '단기적 영향'으로 옳게 설명된 것은 무엇인가요? [교재 11장 / 강의록]",
+    "o": [
+      "승진 기회가 급격히 늘어난다.",
+      "정규직 채용에서 우대받게 된다.",
+      "노동시장 참여 시간이 제약되어 단시간 아르바이트나 비정규직 고용에 집중된다.",
+      "노년기 연금 수령액이 즉각적으로 삭감된다."
+    ],
+    "a": 2,
+    "h": "집안일과 육아를 병행하려면 풀타임으로 일하기 어렵습니다.",
+    "e": "돌봄 제공의 단기적 영향으로 여성은 전일제 노동 참여가 제약되어, 결국 고용 불안정이 높은 시간제(파트타임), 비정규직, 틈새 노동에 종사할 수밖에 없게 됩니다."
+  },
+  {
+    "level": "중",
+    "q": "현장의 소리 인터뷰에서 최현숙 작가가 지적한, 남성 홈리스와 구별되는 여성 홈리스 발생의 주된 (그리고 시작점부터 다른) 경로는 무엇인가요? [교재 11장 현장의 소리]",
+    "o": [
+      "주식 및 가상화폐 투자 실패",
+      "직장에서의 부당 해고와 사업 실패",
+      "가정 내 성폭력이나 가정폭력으로 인한 탈가정",
+      "본인의 자발적인 방랑 욕구"
+    ],
+    "a": 2,
+    "h": "여성들은 집 안이 거리보다 더 위험해서 도망쳐 나옵니다.",
+    "e": "남성 홈리스가 주로 경제적 추락(사업 실패, 실직)으로 거리에 나앉는 반면, 여성 홈리스는 집 안에서 겪는 폭력(가정폭력, 성폭력)을 피해 도망쳐 나오는 경우가 많아 이미 '집 안에서부터 홈리스' 상태였음을 보여줍니다."
+  },
+  {
+    "level": "중",
+    "q": "최현숙 작가가 조사한 빈곤층 질환 통계에 따르면, 남성은 고혈압이나 당뇨 등 신체적 질환이 많은 반면, 빈곤 여성들에게서 상대적으로 매우 높게 나타나는 질환은 무엇인가요? [교재 11장 현장의 소리]",
+    "o": [
+      "관절염",
+      "정신질환",
+      "치아 결손",
+      "호흡기 질환"
+    ],
+    "a": 1,
+    "h": "폭력과 차별로 인한 내면의 깊은 상처가 질병으로 나타납니다.",
+    "e": "여성 홈리스와 빈곤 여성들은 가정폭력, 성폭력, 지속적 차별 등 젠더 기반 폭력과 스트레스에 시달리기 때문에 신체 질환 외에도 정신질환의 비율이 남성보다 훨씬 높게 나타납니다."
+  },
+  {
+    "level": "중",
+    "q": "구술생애사에서 노년 여성들이 자신의 빈곤이나 차별받은 삶을 설명할 때 공통으로 빼놓지 않고 내뱉는 한마디는 무엇인가요? [교재 11장 현장의 소리]",
+    "o": [
+      "나라가 가난해서",
+      "여자라서",
+      "운이 나빠서",
+      "가방끈이 짧아서"
+    ],
+    "a": 1,
+    "h": "남성들은 절대 쓰지 않는, 성차별적 억압을 담은 표현입니다.",
+    "e": "여성 노인들은 교육 기회 박탈, 결혼 과정에서의 불이익, 사회적 차별 등 자신들의 빈곤의 근본 원인을 '여자라서' 겪은 구조적 차별로 명확히 인지하고 구술합니다."
+  },
+  {
+    "level": "중",
+    "q": "최현숙 작가가 빈곤 여성의 삶을 단순히 불행이나 부끄러움으로 치부하지 않고 재해석하도록 돕는 사회복지적 접근(여성주의적 태도)은 무엇인가요? [교재 11장 현장의 소리]",
+    "o": [
+      "개인의 잘못을 철저히 반성하게 하여 자립 의지를 고취한다.",
+      "과거를 완전히 잊고 새로운 직업 훈련에만 매진하게 한다.",
+      "고통을 겪은 경험을 사회 구조적 위치성으로 해석하여, 생존을 이뤄낸 '내면의 힘(저항력)'을 확인하게 한다.",
+      "남성과의 전면적인 대결을 통해 투사로 거듭나게 훈련시킨다."
+    ],
+    "a": 2,
+    "h": "가난은 당신 탓이 아니며, 살아남은 당신은 강하다는 연대의 메시지입니다.",
+    "e": "빈곤 여성이 가난과 폭력을 내면화하여 수치심을 느낄 때, 작가는 이것이 개인 탓이 아닌 사회 구조적 문제임을 일깨우고, 그 고통을 견뎌낸 여성의 내면적 힘과 저항력을 자산으로 인식하도록 돕습니다."
+  },
+  {
+    "level": "중",
+    "q": "2000년대 이후 돌봄노동이 '사회화'되어 유급 일자리(요양보호사, 활동지원사 등)로 전환되었음에도 불구하고, 이 일자리들이 여성빈곤을 근본적으로 해소하지 못하는 이유는 무엇인가요? [강의녹음 11강]",
+    "o": [
+      "자격증 취득 비용이 수천만 원에 달해서",
+      "유급화되었으나 여전히 최저임금 수준의 가장 값싼 노동으로 취급되기 때문에",
+      "남성들만 주로 채용하는 직군으로 변질되어서",
+      "국가가 해당 직종의 취업 자체를 법으로 금지해서"
+    ],
+    "a": 1,
+    "h": "과거 집에서 공짜로 하던 일을 밖에서 돈 받고 하지만, 그 가치를 제대로 인정받지 못합니다.",
+    "e": "과거 가정 내 무급 노동이던 돌봄이 2008년 이후 노인장기요양보험 등으로 유급 일자리화(사회적 노동)되었으나, 여전히 그 가치가 폄하되어 최저임금 수준의 불안정 노동으로 운영되므로 여성빈곤을 크게 완화하지 못하고 있습니다."
+  },
+  {
+    "level": "중",
+    "q": "시간제 노동(틈새 노동)이 여성들에게 만연하게 된 구조적 요인으로 적절하게 짝지어진 것은 무엇인가요? [강의녹음 11강]",
+    "o": [
+      "기업의 노동 유연화 욕구 - 여성의 고임금 선호 성향",
+      "기업의 노동 유연화 이익 - 여성의 육아·가사 병행이라는 불가피한 조건",
+      "기업의 정규직 채용 확대 - 여성의 전일제 근무 기피",
+      "국가의 여성 노동 제한 - 기업의 시간제 고용 거부"
+    ],
+    "a": 1,
+    "h": "기업은 쉽게 해고하고 싶어 하고, 여성은 일과 가정을 동시에 감당해야만 합니다.",
+    "e": "시간제 노동의 확산은 필요할 때 쓰고 쉽게 버리려는 자본(기업)의 노동 유연화 전략과, 가사와 양육의 짐을 진 채 틈새 시간에만 일할 수밖에 없는 여성의 불가피한 조건이 맞물린 결과입니다."}
+        // 
+    ];
+
+    let curIdx = 0;
+    let wrongCount = 0; // 틀린 횟수 추적 변수
+
+    function loadQuestion() {
+        wrongCount = 0;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    function checkAnswer(idx, btn) {
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+        
+        if (idx === q.a) {
+            // 정답을 맞춘 경우
+            btn.classList.add('correct');
+            allBtns.forEach(b => b.style.pointerEvents = 'none'); // 클릭 방지
+            showExplanation();
+        } else {
+            // 틀린 경우
+            wrongCount++;
+            btn.classList.add('wrong');
+            btn.style.pointerEvents = 'none'; // 틀린 버튼 다시 못 누르게
+            
+            if (wrongCount === 1) {
+                // 첫 번째 틀림: 힌트만 보여줌
+                document.getElementById('hint-text').innerText = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                // 두 번째 틀림: 정답 공개
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                showExplanation();
+            }
+        }
+    }
+
+    function showExplanation() {
+        const q = quizData[curIdx];
+        document.getElementById('exp-text').innerText = q.e;
+        document.getElementById('exp-box').style.display = 'block';
+        document.getElementById('next-btn').style.display = 'block';
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            document.getElementById('quiz-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'block';
+            document.getElementById('result-msg').innerText = "11강 학습을 완료하셨습니다. 수고하셨습니다, 학우님!";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>

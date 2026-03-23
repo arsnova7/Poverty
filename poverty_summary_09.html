@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>9강 요점 정리 - 잠시만요! 꼭 기억하세요</title>
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-purple: #764ba2;
+            --light-bg: #fdfaff;
+            --text-dark: #2f3640;
+        }
+        body { font-family: 'Pretendard', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; align-items: flex-start; }
+        
+        .summary-container { 
+            max-width: 800px; width: 100%; background: white; border-radius: 30px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2); padding: 40px; position: relative;
+            margin-top: 20px; margin-bottom: 20px;
+        }
+
+        .top-badge { 
+            background: var(--primary-purple); color: white; display: inline-block; 
+            padding: 8px 20px; border-radius: 50px; font-size: 0.9rem; font-weight: 700; 
+            margin-bottom: 20px; box-shadow: 0 4px 10px rgba(118,75,162,0.3);
+        }
+
+        h1 { font-size: 1.8rem; color: var(--text-dark); margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 15px; text-align: center; }
+        
+        .section-title { font-size: 1.3rem; color: #444; margin-top: 30px; margin-bottom: 15px; font-weight: 800; display: flex; align-items: center; }
+        .section-title::before { content: '📌'; margin-right: 10px; }
+
+        .concept-item { 
+            background: var(--light-bg); border-left: 5px solid var(--primary-purple); 
+            padding: 20px; margin-bottom: 15px; border-radius: 0 15px 15px 0;
+        }
+        
+        .concept-title { font-weight: 800; color: var(--primary-purple); display: block; margin-bottom: 10px; font-size: 1.1rem; border-bottom: 1px dashed #dcdde1; padding-bottom: 5px; }
+        .concept-desc { line-height: 1.8; color: #353b48; font-size: 1.05rem; word-break: keep-all; white-space: pre-wrap; margin: 0; }
+
+        .back-btn { 
+            display: block; text-align: center; padding: 18px; background: var(--text-dark); 
+            color: white; text-decoration: none; border-radius: 15px; margin-top: 40px; 
+            font-weight: 700; transition: 0.3s;
+        }
+        .back-btn:hover { background: #000; letter-spacing: 1px; }
+
+        .icon-watermark { position: absolute; top: 20px; right: 30px; font-size: 3rem; opacity: 0.1; }
+        strong { color: #d63031; }
+    </style>
+</head>
+<body>
+
+<div class="summary-container">
+    <div class="icon-watermark">📖</div>
+    <div class="top-badge">💡 잠시만요! 꼭 기억하세요</div>
+    <h1>9강) 빈곤정책 Ⅱ : 조세정책 및 사회보장정책</h1>
+
+    <div class="section-title">조세의 이해</div>
+    <div class="concept-item">
+        <span class="concept-title">💎 조세의 정의 및 기능</span>
+        <p class="concept-desc">• 국가나 지방자치단체가 법에 근거하여 국민에게 부과하는 강제적인 경제적 부담
+• 반대급부 없이 부과 (사회보험료나 서비스 요금과 구분)
+• 기능 : 재정 확보 수단, 소득 재분배, 자원 배분, 경제 안정화, 사회적 행위 유도 등</p>
+    </div>
+
+    <div class="section-title">조세정책의 원칙과 체계</div>
+    <div class="concept-item">
+        <span class="concept-title">⚖️ 조세정책의 원칙</span>
+        <p class="concept-desc">• <strong>수직적 형평성의 원칙(누진세의 근거)</strong> : 소득이나 자산이 높은 사람은 더 많은 세금을 부담
+• <strong>수평적 형평성의 원칙</strong> : 동일한 경제적 능력을 가진 사람은 동일한 세금을 부담
+• 조세제도의 설계는 정치적 타협의 산물 → 논쟁의 여지 존재</p>
+    </div>
+
+    <div class="concept-item">
+        <span class="concept-title">📊 조세체계 및 부담률</span>
+        <p class="concept-desc">• 국세와 지방세로 나뉘며, 국세는 다시 내국세(소득세, 법인세, 부가가치세 등)와 관세로 구분
+• 지방세 : 취득세, 자동차세, 지방소득세 등
+• <strong>조세부담률</strong> : GDP 대비 국세와 지방세의 비율
+• <strong>국민부담률</strong> : 조세와 사회보장기여금의 GDP 대비 비율
+• 사회보험료 : 법적으로 부과되며, 목적세와 유사한 성격</p>
+    </div>
+
+    <div class="section-title">사회보장정책</div>
+    <div class="concept-item">
+        <span class="concept-title">🛡️ 사회보장의 정의와 목적</span>
+        <p class="concept-desc">• 국민의 삶의 질을 향상시키기 위해 정부가 계획적으로 수행하는 공공정책
+• 사회보험, 공공부조, 사회서비스로 구성
+• 목적 : 출산, 양육, 실업, 노령, 장애, 질병, 빈곤 및 사망 등의 <strong>사회적 위험</strong>으로부터 모든 국민을 보호하고 빈곤을 해소</p>
+    </div>
+
+    <div class="concept-item">
+        <span class="concept-title">🧩 사회보장제도의 구성</span>
+        <p class="concept-desc">1) <strong>사회보험</strong> : 국민에게 발생하는 사회적 위험을 보험의 방식으로 대처함으로써 국민의 건강과 소득을 보장 (연금, 고용보험 등)
+2) <strong>공공부조</strong> : 국가와 지방자치단체의 책임 아래 생활 유지 능력이 없거나 생활이 어려운 국민의 최저생활을 보장하고 자립을 지원 (기초생활보장 등)
+3) <strong>사회서비스</strong> : 복지, 보건의료, 교육, 고용, 주거, 문화 등의 분야에서 인간다운 생활을 보장하고 삶의 질이 향상되도록 지원하는 제도</p>
+    </div>
+
+    <div class="concept-item">
+        <span class="concept-title">📢 사회보장정책의 성격</span>
+        <p class="concept-desc">• 소득재분배 기능 수행
+• 사회적 연대성과 통합 증진
+• 국가의 책임 강조</p>
+    </div>
+
+    <a href="index.html" class="back-btn">모두 확인했습니다! 메인으로</a>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>빈곤론 퀴즈 [12강 - 초급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); opacity: 0.6; }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; color: #856404; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .result-btn { width:100%; padding:15px; margin:10px 0; border:1px solid #e2e8f0; border-radius:10px; background:white; cursor:pointer; font-size:1rem; font-weight:bold; transition:0.2s; }
+    .result-btn:hover { background:#f0f4ff; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제12강: 노인과 빈곤 (초급)</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>정답 및 해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <p id="result-msg"></p>
+        <button class="result-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="result-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    /* [노트북LM 데이터]
+       형식: {"level": "하", "q": "질문", "o": ["보기1","보기2","보기3","보기4"], "a": 정답번호, "h": "힌트", "e": "해설"}
+    */
+    const quizData = [
+        {"level": "하", "q": "노인이 겪는 4가지 고통(사고, 四苦) 중 가정과 사회에서 책임과 업무의 역할을 잃는 것을 의미하는 것은 무엇인가요? [잠시만요 요약본 / 교재 12장]",
+    "o": [
+      "병고(病苦)",
+      "고독고(孤獨苦)",
+      "무위고(無爲苦)",
+      "빈고(貧苦)"
+    ],
+    "a": 2,
+    "h": "할 일이 없어져서 겪게 되는 고통을 뜻합니다.",
+    "e": "빈곤노인이 겪는 4고(四苦)는 병고(질병), 빈고(빈곤), 고독고(외로움), 무위고(역할 상실)로 구성됩니다. 무위고는 가정과 사회에서 책임과 업무의 역할을 잃는 데서 오는 고통입니다."
+  },
+  {
+    "level": "하",
+    "q": "영국의 사회학자 티트머스(Titmuss)는 '노령'과 노인 돌봄의 문제를 공해나 실업과 같은 어떤 현상으로 설명하였나요? [잠시만요 요약본 / 교재 12장]",
+    "o": [
+      "자연적 도태 현상",
+      "비복지 또는 역복지 현상",
+      "생물학적 필연 현상",
+      "자발적 고립 현상"
+    ],
+    "a": 1,
+    "h": "급격한 사회 구조적 변화가 만들어낸 부작용이라는 의미를 담고 있습니다.",
+    "e": "티트머스는 급격한 사회 변화가 공해나 실업을 양산했듯, 노령과 노인 돌봄 문제 또한 현대 사회 구조가 초래한 비복지 혹은 역복지 현상이라고 설명했습니다."
+  },
+  {
+    "level": "하",
+    "q": "산업화 시대에 노인빈곤이 탄생하게 된 구조적인 배경으로 가장 적절한 것은 무엇인가요? [잠시만요 요약본 / 교재 12장]",
+    "o": [
+      "조기 유학의 증가",
+      "가족 형태의 핵가족화로 인한 부양 공백",
+      "국민연금의 조기 고갈",
+      "귀농 인구의 급증"
+    ],
+    "a": 1,
+    "h": "전통적인 대가족 제도가 해체되면서 발생한 현상입니다.",
+    "e": "산업화 시기를 거치며 대가족에서 핵가족으로 가족 형태가 변화했고, 이로 인해 가족이 부양 역할을 할 수 없는 부양 공백이 생기면서 노인빈곤이 심화되었습니다."
+  },
+  {
+    "level": "하",
+    "q": "고령화 사회로 진입하며 노령인구가 급격히 증가함에 따라 새롭게 사회문제로 대두된 가난한 노인층을 지칭하는 용어는 무엇인가요? [잠시만요 요약본 / 교재 12장]",
+    "o": [
+      "워킹 푸어",
+      "하우스 푸어",
+      "실버 푸어",
+      "타임 푸어"
+    ],
+    "a": 2,
+    "h": "은발(노인)과 가난을 뜻하는 단어의 합성어입니다.",
+    "e": "고령화로 인해 노인 인구가 급격히 증가하면서 경제적으로 빈곤한 노인들을 뜻하는 '실버 푸어(silver poor)'가 사회문제로 크게 대두되었습니다."
+  },
+  {
+    "level": "하",
+    "q": "노인빈곤의 전망에 대한 '낙관적 견해'가 주장하는 근거는 무엇인가요? [잠시만요 요약본 / 교재 12장]",
+    "o": [
+      "자녀 세대의 소득이 급증하여 사적 부양이 강화될 것이다.",
+      "노인들이 일자리를 독점하여 근로소득이 증가할 것이다.",
+      "사회보장이 확대됨에 따라 은퇴 후 시장 임금은 줄어도 사회임금이 증가할 것이다.",
+      "고령자 전원에게 강제로 기업 연금을 지급하게 될 것이다."
+    ],
+    "a": 2,
+    "h": "국가의 복지 제도 확대가 노인빈곤을 줄일 것이라는 시각입니다.",
+    "e": "낙관적 견해는 복지국가의 발달로 사회보장이 확대되면, 은퇴 후 시장 임금이 줄더라도 국가가 보장하는 '사회임금'이 증가하여 노인빈곤이 점차 감소할 것이라고 봅니다."
+  },
+  {
+    "level": "하",
+    "q": "2024년 기말고사 기출 응용문제입니다. 한국의 노인빈곤율이 OECD 국가 중 압도적 1위를 차지하는 근본적인 이유로 가장 적절한 것은 무엇인가요? [2024 기말고사 후기 / 잠시만요 요약본]",
+    "o": [
+      "노인들이 부동산 투기에 실패해서",
+      "공적 이전소득이 매우 낮고 시장 임금 의존도가 높아서",
+      "건강보험 제도가 전면 폐지되었기 때문에",
+      "자녀들이 부모에게 재산을 모두 상속받고 부양을 회피해서"
+    ],
+    "a": 1,
+    "h": "국가에서 주는 연금 수입은 적고, 일해서 벌어야 하는 돈의 비중이 큽니다.",
+    "e": "한국 노인빈곤의 핵심 원인은 공적 연금 등 국가가 지원하는 공적 이전소득 수준이 매우 낮고, 여전히 개인이 노동시장에서 벌어들이는 시장 임금에 의존해야 하는 취약한 구조 때문입니다."
+  },
+  {
+    "level": "하",
+    "q": "빈곤의 원인을 국가와 사회의 구조적 문제로 인식하며, 후배시민을 돌보고 권리를 주장하며 변화를 만드는 노인을 지칭하는 개념은 무엇인가요? [잠시만요 요약본 / 교재 12장]",
+    "o": [
+      "성공한 노인",
+      "선배시민",
+      "활동적 늙은이",
+      "생산적 노인"
+    ],
+    "a": 1,
+    "h": "단순한 연장자가 아니라 시민의식과 권리의식을 갖춘 주체입니다.",
+    "e": "선배시민은 단순히 나이 든 늙은이나 자기 계발에 몰두하는 성공한 노인을 넘어, 공동체를 돌보고 불평등한 사회 구조를 변화시키기 위해 자기 목소리를 내며 권리를 행사하는 주체적인 노인을 뜻합니다."
+  },
+  {
+    "level": "하",
+    "q": "빈곤의 원인을 개인의 노력 부족이나 역량 부족, 게으름 탓으로 돌리고 시장에 적응하지 못한 경우에만 국가가 선별적으로 구제해야 한다고 보는 시각은 무엇의 관점인가요? [잠시만요 요약본 / 교재 12장]",
+    "o": [
+      "비판적 노년학의 시각",
+      "진보적 노년학의 시각",
+      "선배시민의 시각",
+      "성공한 노인과 늙은이 담론의 시각"
+    ],
+    "a": 3,
+    "h": "가난을 구조가 아닌 개인의 책임으로 돌리는 과거의 담론입니다.",
+    "e": "전통적인 '늙은이'나 '성공한 노인' 담론은 빈곤의 원인을 개인에게 돌리며, 가족 부양을 우선시하고 국가의 개입은 잔여적(선별적) 복지에 머물러야 한다고 봅니다."
+  },
+  {
+    "level": "하",
+    "q": "노인들이 새벽 첫 지하철을 타고 돌아다니며 무료 급식을 먹고 동전을 나누어 주는 곳을 찾아다니는 현상을 일컫는 조어는 무엇인가요? [교재 12장 / 강의녹음]",
+    "o": [
+      "실버 서핑",
+      "짤짤이 순례",
+      "황혼 배회",
+      "은빛 탐험"
+    ],
+    "a": 1,
+    "h": "동전을 뜻하는 은어와 성지순례를 합친 말입니다.",
+    "e": "극심한 경제적 빈곤으로 인해 생존권을 확보하고자, 노인들이 이른 새벽 첫차를 타고 무료 급식소나 소액의 동전을 나눠주는 사찰/교회 등을 찾아다니는 생계형 활동을 '짤짤이 순례'라고 부릅니다."
+  },
+  {
+    "level": "하",
+    "q": "이른 은퇴 후 자녀 양육비 등을 벌기 위해 노동시장에 재진입한 노인들이 임시직, 계약직에 종사하는 불안정한 노동 구조를 뜻하는 신조어는 무엇인가요? [교재 12장 / 강의녹음]",
+    "o": [
+      "고다자",
+      "워킹푸어",
+      "임계장",
+      "프리터"
+    ],
+    "a": 2,
+    "h": "임시직, 계약직, 노익장의 앞 글자를 딴 말입니다.",
+    "e": "조기 은퇴 후 생계를 위해 다시 일터로 나온 노인들은 대부분 불안정한 비정규직 일자리를 전전하게 되는데, 이러한 '임시직·계약직·노익장'의 현실을 반영하여 '임계장'이라는 조어가 사용됩니다."
+  },
+  {
+    "level": "하",
+    "q": "불안정한 노인 노동의 취약성을 나타내는 은어로, '고르기 쉽고, 다루기 쉽고, 자르기 쉬운 노인 노동'을 줄여 부르는 말은 무엇인가요? [교재 12장 / 강의녹음]",
+    "o": [
+      "고다자",
+      "임계장",
+      "노노케어",
+      "노익장"
+    ],
+    "a": 0,
+    "h": "기업 입장에서 노인 노동력을 쉽게 착취하는 태도를 보여주는 줄임말입니다.",
+    "e": "노인 노동 시장이 양질의 일자리가 아닌 단순 노무와 저임금에 집중되면서, 자본(기업) 입장에서 마음대로 부리고 해고하기 쉬운 취약한 지위를 '고다자'라고 표현합니다."
+  },
+  {
+    "level": "하",
+    "q": "과거 노후 부양은 전적으로 '이것'을 잘 지으면 해결된다고 여겼으나, 현대 사회에서는 국가와 제도가 보장하는 '사회 농사'로 인식이 전환되어야 한다고 강조합니다. '이것'은 무엇인가요? [강의록 12강 / 강의녹음]",
+    "o": [
+      "과일 농사",
+      "자식 농사",
+      "주식 농사",
+      "건강 농사"
+    ],
+    "a": 1,
+    "h": "자녀를 잘 키워서 부양을 기대하는 전통적 관념입니다.",
+    "e": "과거에는 노후 부양 책임을 가족에게 돌리며 '자식 농사'를 잘 지어야 노후가 보장된다고 보았으나, 저출산 고령화 및 가족 구조 변화로 인해 이제는 국가와 사회가 책임지는 '사회 농사'로 인식이 바뀌고 있습니다."
+  },
+  {
+    "level": "하",
+    "q": "노인빈곤운동의 하나로, 30여 명의 노인들이 모여 서로 짝을 이뤄 돌봄을 제공하고 고추장과 된장을 만들어 팔며 기초연금 인상 요구 등 권리 운동을 펼치는 이 공동체의 이름은 무엇인가요? [강의록 12강 / 워크북]",
+    "o": [
+      "황금빛 청춘",
+      "은빛 사랑방",
+      "노들야학",
+      "시니어클럽"
+    ],
+    "a": 1,
+    "h": "은발을 뜻하는 단어가 들어간 모임방 이름입니다.",
+    "e": "관악 지역의 '은빛 사랑방'은 노인들이 단순히 수혜자에 머물지 않고, 나눔과 연대를 실천하며 노인 권리 운동(기초연금 인상 요구 등)에 주체적으로 참여하는 선배시민 운동의 대표적 실천 사례입니다."
+  },
+  {
+    "level": "하",
+    "q": "선배시민 선언문에서 노인이 권리로서 당당히 누려야 한다고 외치는 두 가지 상징 중, 생존권(사회권)을 뜻하는 것과 존엄성(권리와 권력)을 뜻하는 것은 각각 무엇인가요? [강의록 12강 / 교재 12장]",
+    "o": [
+      "자유와 평등",
+      "피와 땀",
+      "빵과 장미",
+      "물과 소금"
+    ],
+    "a": 2,
+    "h": "여성 노동자들의 파업 구호에서도 유래한 상징적인 두 단어입니다.",
+    "e": "선배시민은 공동체를 돌보고 자신을 돌보며 '빵(사회권, 생존권)'과 '장미(권리와 권력, 존엄)'를 요구하는 주체입니다."
+  },
+  {
+    "level": "하",
+    "q": "한국 노인의 자살률이 2014년 이후 다소 감소하는 경향을 보였는데, 이는 어떤 국가 제도의 도입과 밀접한 관련이 있다고 해석되나요? [교재 12장 / 강의녹음]",
+    "o": [
+      "주택연금 도입",
+      "기초연금 도입",
+      "노인장기요양보험 도입",
+      "기초생활보장제도 폐지"
+    ],
+    "a": 1,
+    "h": "모든 노인 또는 하위 70% 노인에게 현금을 지급하는 제도입니다.",
+    "e": "노인 자살의 주원인은 경제적 어려움입니다. 2014년 기초연금이 도입되면서 공적 이전 소득이 일정 부분 증가하였고, 이 시점과 맞물려 노인 자살률이 다소 감소하는 양상을 보였습니다."}
+        // 
+    ];
+
+    let curIdx = 0;
+    let wrongCount = 0; // 틀린 횟수 추적 변수
+
+    function loadQuestion() {
+        wrongCount = 0;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    function checkAnswer(idx, btn) {
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+        
+        if (idx === q.a) {
+            // 정답을 맞춘 경우
+            btn.classList.add('correct');
+            allBtns.forEach(b => b.style.pointerEvents = 'none'); // 클릭 방지
+            showExplanation();
+        } else {
+            // 틀린 경우
+            wrongCount++;
+            btn.classList.add('wrong');
+            btn.style.pointerEvents = 'none'; // 틀린 버튼 다시 못 누르게
+            
+            if (wrongCount === 1) {
+                // 첫 번째 틀림: 힌트만 보여줌
+                document.getElementById('hint-text').innerText = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                // 두 번째 틀림: 정답 공개
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                showExplanation();
+            }
+        }
+    }
+
+    function showExplanation() {
+        const q = quizData[curIdx];
+        document.getElementById('exp-text').innerText = q.e;
+        document.getElementById('exp-box').style.display = 'block';
+        document.getElementById('next-btn').style.display = 'block';
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            document.getElementById('quiz-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'block';
+            document.getElementById('result-msg').innerText = "12강 학습을 완료하셨습니다. 수고하셨습니다, 학우님!";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>

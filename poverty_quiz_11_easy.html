@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>빈곤론 퀴즈 [11강 - 초급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); opacity: 0.6; }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; color: #856404; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .result-btn { width:100%; padding:15px; margin:10px 0; border:1px solid #e2e8f0; border-radius:10px; background:white; cursor:pointer; font-size:1rem; font-weight:bold; transition:0.2s; }
+    .result-btn:hover { background:#f0f4ff; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제11강: 여성과 빈곤 (초급)</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>정답 및 해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <p id="result-msg"></p>
+        <button class="result-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="result-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    /* [노트북LM 데이터]
+       형식: {"level": "하", "q": "질문", "o": ["보기1","보기2","보기3","보기4"], "a": 정답번호, "h": "힌트", "e": "해설"}
+    */
+    const quizData = [
+        {"level": "하", "q": "2024년 기말고사 기출 응용문제입니다. 여성빈곤을 발생시키는 '노동의 성역할 분화'에 대한 설명으로 가장 거리가 먼 것(틀린 것)은 무엇인가요? [2024 기말고사 후기 / 교재 11장]",
+    "o": [
+      "남성은 주로 유급 노동시장에서 생산의 역할을 담당한다고 본다.",
+      "여성은 가정에서 무보수로 돌봄과 재생산의 역할을 맡는다고 본다.",
+      "여성이 가난한 이유는 단지 여성이 적극적으로 일자리를 찾지 않는 개인의 게으름 때문이다.",
+      "가정에서의 무보수 노동으로 인해 여성이 유급 노동시장에 참여할 때 그 가치가 저평가된다."
+    ],
+    "a": 2,
+    "h": "여성빈곤은 개인의 노력 부족이 아니라 구조적인 노동 분업에서 기인합니다.",
+    "e": "여성빈곤의 핵심 원인인 '노동의 성역할 분화'는 여성을 무급 가사노동에 묶어두고 노동시장 참여를 제약하는 구조적 문제입니다. '여성이 적극적으로 일자리를 찾지 않아서'라는 개인적 탓으로 돌리는 것은 틀린 문항으로 2024년 기말고사에 출제되었습니다."
+  },
+  {
+    "level": "하",
+    "q": "2024년 기말고사 기출 응용문제입니다. 남성의 임금은 전체 가족을 부양하기에 충분해야 하고, 여성의 임금은 남성의 임금을 보조하는 정도면 된다고 가정하는 이 개념은 무엇인가요? [2024 기말고사 후기 / 잠시만요 요약본]",
+    "o": [
+      "사회임금",
+      "가족임금",
+      "최저임금",
+      "기본소득"
+    ],
+    "a": 1,
+    "h": "노동의 성 분화 토대가 된 임금의 형태입니다.",
+    "e": "가족임금(family wage)은 전형적인 가족을 부양하기에 충분한 임금을 남성 가장에게 주어야 한다는 견해로, 여성의 노동을 부차적인 것으로 평가절하하며 성별 임금 격차를 정당화하는 토대가 되었습니다."
+  },
+  {
+    "level": "하",
+    "q": "2024년 기말고사 기출 응용문제입니다. 여성 억압과 빈곤의 원인을 생물학적 차이에 기반한 '가부장제' 체계로 규정하고 이를 철폐해야 한다고 주장하는 성평등의 관점은 무엇인가요? [2024 기말고사 후기 / 강의록 11강]",
+    "o": [
+      "자유주의적 관점",
+      "마르크스주의적 관점",
+      "급진주의적 관점",
+      "사회주의적 관점"
+    ],
+    "a": 2,
+    "h": "생물학적 차이와 남성 지배 구조를 비판하는 강경한 관점입니다.",
+    "e": "급진주의적 관점은 남성 중심의 지배 구조인 '가부장제'를 여성 억압의 근본 원인으로 제시하며, 이를 철폐할 것을 주장합니다."
+  },
+  {
+    "level": "하",
+    "q": "여성과 남성 사이에 빈곤의 정도가 크게 차이가 나며, 전체 빈곤층에서 여성이 차지하는 비율이 점차 높아지는 현상을 일컫는 개념은 무엇인가요? [잠시만요 요약본 / 교재 11장]",
+    "o": [
+      "빈곤의 여성화",
+      "노동의 유연화",
+      "복지의 잔여화",
+      "가족의 해체"
+    ],
+    "a": 0,
+    "h": "1970년대에 처음 제기되어 1990년대 UN을 통해 널리 확산된 개념입니다.",
+    "e": "빈곤의 여성화(Feminization of Poverty)는 경제 침체와 구조적 불평등 속에서 여성 가장 가구나 여성 층에서 빈곤이 상대적으로 더 크게 집중되고 증가하는 현상을 말합니다."
+  },
+  {
+    "level": "하",
+    "q": "과거 여성들이 독자적인 경제적 자립보다는 남성의 경제력에 기대어 안정을 얻기 위해 혼인을 선택하던 현상을 일컫는 용어는 무엇인가요? [교재 11장 / 워크북]",
+    "o": [
+      "비혼",
+      "만혼",
+      "취혼",
+      "졸혼"
+    ],
+    "a": 2,
+    "h": "취업 대신 결혼을 선택한다는 의미를 담고 있습니다.",
+    "e": "여성이 노동에 참여하지 않고 결혼을 통해 남성 배우자의 소득에 의존하여 사는 현상을 '취혼'이라고 불렀습니다. 이는 여성의 경제적 종속을 강화하는 결과를 낳았습니다."
+  },
+  {
+    "level": "하",
+    "q": "여성이 노동시장에 진입하더라도 눈에 보이지 않는 차별적 장벽 때문에 고위직 진출이나 승진에서 배제되는 현상을 가리키는 용어는 무엇인가요? [교재 11장 / 워크북]",
+    "o": [
+      "유리천장",
+      "회전문 현상",
+      "피터의 법칙",
+      "풍선 효과"
+    ],
+    "a": 0,
+    "h": "투명하지만 단단해서 위로 올라가지 못하게 막는 지붕을 의미합니다.",
+    "e": "유리천장(Glass Ceiling)은 구조적인 성차별로 인해 여성이 조직 내에서 충분한 능력을 갖추었음에도 고위직이나 관리직으로 승진하지 못하도록 가로막는 보이지 않는 장벽을 뜻합니다."
+  },
+  {
+    "level": "하",
+    "q": "노동의 성별 분업 하에서 여성이 가정 내에서 무급으로 수행하는 가사 및 돌봄 노동은 노동시장의 관점에서 어떤 노동으로 취급받아 왔나요? [교재 11장 / 강의록]",
+    "o": [
+      "최고 부가가치 노동",
+      "1차적 중심 노동",
+      "생산적 임금 노동",
+      "부수적이고 2차적인 노동"
+    ],
+    "a": 3,
+    "h": "여성의 시장 노동 참여조차 부차적인 활동으로 인식되게 만들었습니다.",
+    "e": "노동의 성역할 분화 체계에서 여성의 유급 노동시장 참여는 가사노동이라는 본래 역할 후 남는 시간에 하는 '2차적'이고 부차적인 노동으로 간주되어 저임금과 고용 불안을 정당화하는 논리로 작용했습니다."
+  },
+  {
+    "level": "하",
+    "q": "젊은 시기에 가족을 돌보느라 노동시장 참여가 제한된 여성이 노년기에 빈곤해지는 불평등의 과정을 설명하는 이론은 무엇인가요? [잠시만요 요약본 / 교재 11장]",
+    "o": [
+      "누적 취약 이론",
+      "자유방임 이론",
+      "인적 자본 이론",
+      "이중 노동시장 이론"
+    ],
+    "a": 0,
+    "h": "생애주기 전반에 걸쳐 불리한 조건들이 계속 쌓인다는 의미입니다.",
+    "e": "누적 취약 이론(cumulative disadvantage theory)은 돌봄 제공으로 인한 노동시장 이탈과 저축 소진, 건강 악화 등의 불리함이 생애 전반에 걸쳐 누적되어 노년기 빈곤으로 귀결된다고 설명합니다."
+  },
+  {
+    "level": "하",
+    "q": "현재의 사회보장제도(사회보험)가 여성에게 구조적으로 불리하게 작용하는 핵심 이유는 이 제도가 어떤 활동을 중심으로 설계되어 있기 때문인가요? [잠시만요 요약본 / 교재 11장]",
+    "o": [
+      "자원봉사 활동 중심",
+      "노동시장의 임금 중심(유급노동)",
+      "무급 가사노동 중심",
+      "자녀 양육 횟수 중심"
+    ],
+    "a": 1,
+    "h": "보험료를 내려면 먼저 시장에서 돈을 벌어야 합니다.",
+    "e": "대부분의 사회보장제도(국민연금 등)는 유급 노동시장에서 임금을 받고 보험료를 기여하는 것을 전제로 설계되어 있어, 경력 단절이나 무급 돌봄노동을 주로 하는 여성은 혜택에서 배제되기 쉽습니다."
+  },
+  {
+    "level": "하",
+    "q": "여성빈곤 연구가 기존 빈곤 연구를 비판하며 새롭게 주목할 것을 요구한 시각(관점)은 무엇인가요? [교재 11장 / 강의녹음]",
+    "o": [
+      "인구학적 관점",
+      "젠더(Gender) 관점",
+      "기술결정론적 관점",
+      "시장주의적 관점"
+    ],
+    "a": 1,
+    "h": "사회적으로 구성된 성 역할 차이를 분석하는 관점입니다.",
+    "e": "기존 연구는 남성 중심의 경제적 측면만 다루어 여성이 겪는 빈곤의 다면성을 놓쳤습니다. 이에 따라 여성의 빈곤을 성별 권력관계와 사회적 역할 차이 속에서 분석하는 '젠더 관점'의 필요성이 강조되었습니다."
+  },
+  {
+    "level": "하",
+    "q": "여성빈곤 퇴치를 위해 노동시장 접근성 개선과 함께 국가의 복지제도 측면에서 새롭게 요구되는 체제는 무엇인가요? [잠시만요 요약본 / 교재 11장]",
+    "o": [
+      "잔여적 자선 체제",
+      "보편적 사회보장체제",
+      "민간 보험 중심 체제",
+      "가족 부양 의무화 체제"
+    ],
+    "a": 1,
+    "h": "노동시장의 임금 기여 여부와 상관없이 모든 시민의 최소 생활을 보장하는 방식입니다.",
+    "e": "임금 노동 중심의 기여형 사회보험은 여성에게 불리하므로, 시민이라면 누구나 기본적인 소득을 보장받을 수 있는 '보편적 사회보장체제(수당 등)'로의 전환이 여성빈곤 완화의 대안으로 제시됩니다."
+  },
+  {
+    "level": "하",
+    "q": "여성이 가사노동을 전담하고 남성이 노동시장에 전념하게 되면, 남성의 고용 기회와 노동시장 내 지위는 어떻게 변화한다고 보나요? [잠시만요 요약본 / 강의록 11강]",
+    "o": [
+      "남성의 고용 기회가 줄어든다.",
+      "남성의 고용 기회가 증가하고 경제적 이익이 확대된다.",
+      "남성도 동시에 임금이 하락한다.",
+      "남녀 모두의 고용률이 완벽히 동일해진다."
+    ],
+    "a": 1,
+    "h": "여성이 돌봄을 책임져 주므로 남성은 일에만 매진할 수 있습니다.",
+    "e": "여성주의적 관점에 따르면 노동의 성 분화는 여성이 무보수 재생산 노동을 맡아줌으로써 남성에게 유급 노동시장에 전념할 수 있는 조건(고용 기회 확대)을 제공하여 불평등을 낳는다고 봅니다."
+  },
+  {
+    "level": "하",
+    "q": "빈곤의 여성화 개념을 설명할 때 빈곤이 '절대적'이기보다는 주로 어떤 개념으로 이해되어야 한다고 보나요? [교재 11장 / 워크북]",
+    "o": [
+      "유전적 개념",
+      "상대적 개념",
+      "일시적 개념",
+      "운명적 개념"
+    ],
+    "a": 1,
+    "h": "남성의 빈곤 정도와 비교했을 때 여성이 '더' 빈곤하다는 의미입니다.",
+    "e": "빈곤의 여성화는 절대적 빈곤의 양만이 아니라, '남성과 비교했을 때 상대적으로' 여성이 훨씬 빈곤 위험에 높게 노출되어 있다는 상대적 개념과 구조적 불평등을 강조합니다."
+  },
+  {
+    "level": "하",
+    "q": "빈곤 여성의 현실을 제대로 파악하기 위해서는 남성의 빈곤 조사 방식에서 탈피하여, 여성의 생애 내력을 고려한 어떤 관점의 실태 조사가 필요한가요? [교재 11장 현장의 소리]",
+    "o": [
+      "성인지적 관점",
+      "효율성 중심 관점",
+      "세대 통합적 관점",
+      "시장 경쟁적 관점"
+    ],
+    "a": 0,
+    "h": "성별에 따른 경험의 차이를 민감하게 인지하는 태도입니다.",
+    "e": "최현숙 작가는 여성빈곤의 경로가 남성과 본질적으로 다르므로, 젠더 차별로 인한 폭력과 배제 등을 꼼꼼히 묻는 '성인지적 관점'의 실태 조사와 예산 배정이 필수적이라고 강조했습니다."
+  },
+  {
+    "level": "하",
+    "q": "과거 영국과 네덜란드에서 모자가족 여성의 빈곤 완화를 위해 '엄마'라는 정체성 대신 어떤 정체성을 부여하는 정책을 추진했나요? [교재 11장 / 워크북]",
+    "o": [
+      "소비자",
+      "수혜자",
+      "노동자",
+      "관리자"
+    ],
+    "a": 2,
+    "h": "여성들이 시장에서 직접 임금을 벌도록 장려하는 정체성입니다.",
+    "e": "1990년대 영국과 네덜란드에서는 돌봄 여성에게 '엄마'라는 전통적 역할에 머물게 하기보다, 교육과 일자리를 연계하여 '노동자'로서의 정체성을 부여함으로써 노동시장 참여를 장려했습니다."}
+        // 
+    ];
+
+    let curIdx = 0;
+    let wrongCount = 0; // 틀린 횟수 추적 변수
+
+    function loadQuestion() {
+        wrongCount = 0;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    function checkAnswer(idx, btn) {
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+        
+        if (idx === q.a) {
+            // 정답을 맞춘 경우
+            btn.classList.add('correct');
+            allBtns.forEach(b => b.style.pointerEvents = 'none'); // 클릭 방지
+            showExplanation();
+        } else {
+            // 틀린 경우
+            wrongCount++;
+            btn.classList.add('wrong');
+            btn.style.pointerEvents = 'none'; // 틀린 버튼 다시 못 누르게
+            
+            if (wrongCount === 1) {
+                // 첫 번째 틀림: 힌트만 보여줌
+                document.getElementById('hint-text').innerText = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                // 두 번째 틀림: 정답 공개
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                showExplanation();
+            }
+        }
+    }
+
+    function showExplanation() {
+        const q = quizData[curIdx];
+        document.getElementById('exp-text').innerText = q.e;
+        document.getElementById('exp-box').style.display = 'block';
+        document.getElementById('next-btn').style.display = 'block';
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            document.getElementById('quiz-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'block';
+            document.getElementById('result-msg').innerText = "8강 학습을 완료하셨습니다. 수고하셨습니다, 학우님!";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>

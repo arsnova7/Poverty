@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>빈곤론 퀴즈 [14강 - 중급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); opacity: 0.6; }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; color: #856404; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .result-btn { width:100%; padding:15px; margin:10px 0; border:1px solid #e2e8f0; border-radius:10px; background:white; cursor:pointer; font-size:1rem; font-weight:bold; transition:0.2s; }
+    .result-btn:hover { background:#f0f4ff; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제14강: 장애와 빈곤 (중급)</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>정답 및 해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <p id="result-msg"></p>
+        <button class="result-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="result-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    /* [노트북LM 데이터]
+       형식: {"level": "중", "q": "질문", "o": ["보기1","보기2","보기3","보기4"], "a": 정답번호, "h": "힌트", "e": "해설"}
+    */
+    const quizData = [
+        {"level": "중", "q": "장애인의 노동시장 고용률을 기업 규모별로 살펴볼 때, 상대적으로 가장 저조한 고용 실적(약 47.1%)을 보이는 기업군은 어디인가요? [교재 14장 / 강의록]",
+    "o": [
+      "10인 미만의 영세기업",
+      "100인 미만의 소기업",
+      "100인~299인 규모의 중견기업",
+      "1,000인 이상의 대기업"
+    ],
+    "a": 2,
+    "h": "대기업과 소기업 사이의 어중간한 규모에서 고용을 가장 기피합니다.",
+    "e": "대기업(67.9%)과 소기업(63.4%)은 비교적 고용률이 높으나, 100~299인 규모의 기업은 47.1%로 가장 낮은 장애인 고용 수준을 보입니다."
+  },
+  {
+    "level": "중",
+    "q": "일부 장애인 단체에서 현행 '장애인 의무고용 부담금'의 기준액을 인상해야 한다고 강력히 주장하는 현실적인 이유는 무엇인가요? [교재 14장 / 워크북]",
+    "o": [
+      "기업들이 부담금 납부를 회피하고 장애인을 100% 무조건 고용하기 때문이다.",
+      "부담금이 너무 적어, 기업 입장에서는 환경 개선이나 임금 지급보다 차라리 벌금(부담금)을 내는 것이 경제적으로 이득이라고 판단하기 때문이다.",
+      "국가 재정을 불려서 다른 인프라 사업에 투자하기 위함이다.",
+      "장애인 근로자의 임금을 삭감하기 위한 조치이다."
+    ],
+    "a": 1,
+    "h": "기업들이 고용 대신 돈으로 때우는 것을 막기 위해서입니다.",
+    "e": "현재 위반 부담금이 최저임금 수준으로 낮게 책정되어 있어, 기업들은 비용이 더 드는 편의시설 구축이나 고용 대신 차라리 부담금을 납부하는 쪽을 택합니다. 실질적 고용을 이끌기 위해 부담금 상향이 요구됩니다."
+  },
+  {
+    "level": "중",
+    "q": "장애인 가구가 부담하는 월평균 추가 소요 비용 중, 가장 높은 비율(약 58.5%)을 차지하는 지출 항목은 무엇인가요? [교재 14장 / 강의록]",
+    "o": [
+      "통신비",
+      "교통비",
+      "의료비",
+      "보호·간병비"
+    ],
+    "a": 2,
+    "h": "장애로 인해 비장애인보다 약 4배 더 많이 지출하게 되는 항목입니다.",
+    "e": "장애로 인한 월평균 추가 소요 비용 중 가장 큰 비중을 차지하는 것은 의료비(58.5%)이며, 그 다음이 교통비(25.7%), 보호·간병비(21.9%) 순입니다."
+  },
+  {
+    "level": "중",
+    "q": "장애인의 추가 비용 산출에 영향을 미치는 다각적 요인으로 바르게 언급되지 않은 것은 무엇인가요? [교재 14장 / 강의록]",
+    "o": [
+      "개인의 장애 형태 및 손상 정도",
+      "장애인 거주 지역의 교육 및 의료 서비스 인프라 접근성",
+      "보조기구의 맞춤 제작 및 수리 빈도",
+      "장애인의 정치적 성향 및 투표 여부"
+    ],
+    "a": 3,
+    "h": "물리적, 사회적 환경 요인이 비용을 결정합니다.",
+    "e": "장애 추가 비용은 장애 형태/정도, 보조기구 유지비, 거주 지역의 의료/교육 인프라 수준(접근성)에 따라 크게 달라집니다. 개인의 정치적 성향은 추가 비용 산출 요인과 무관합니다."
+  },
+  {
+    "level": "중",
+    "q": "장애인 가구에서 발생하는 '돌봄'이 가족 전체의 빈곤으로 직결되는 이유를 가장 정확히 설명한 것은 무엇인가요? [워크북 14장 / 교재 14장]",
+    "o": [
+      "국가가 돌봄 가족에게 매월 고액의 세금을 징수하기 때문이다.",
+      "돌봄을 전담하는 가족 구성원의 노동시장 참여가 불가능해지고, 참여하더라도 시간 제약으로 저소득에 머물게 되는 기회비용 때문이다.",
+      "돌봄 가족 전원이 무조건 해외로 이주해야 하는 법적 의무 때문이다.",
+      "중증장애인 활동지원 서비스가 24시간 완벽하게 무료로 제공되기 때문이다."
+    ],
+    "a": 1,
+    "h": "간병과 일(노동)을 병행하기 어렵기 때문입니다.",
+    "e": "사회적 돌봄 체계가 부족하여 가족이 직접 돌봄을 전담하게 되면, 해당 가족 구성원은 유급 노동시장에서 이탈하거나 파트타임 노동에 머물게 되어 소득이 단절되고 빈곤 위험에 빠지게 됩니다."
+  },
+  {
+    "level": "중",
+    "q": "장애아동을 둔 가구가 일반 가구에 비해 극심한 경제적 어려움을 겪는 요인으로 틀린 것은 무엇인가요? [교재 14장 / 강의록]",
+    "o": [
+      "일반 아동에 비해 양육과 치료비로 약 3배 이상 더 많은 비용이 소요된다.",
+      "아동을 주로 돌보는 여성의 유급 노동시장 진입이 심각하게 제한된다.",
+      "국가가 장애아동 부모에게만 특별 근로세를 부과한다.",
+      "각종 재활, 치료, 특수 교육 기회가 필수적으로 요구되어 지출이 늘어난다."
+    ],
+    "a": 2,
+    "h": "부모의 일할 기회가 줄어들고 지출이 많아지는 것이 원인입니다.",
+    "e": "장애아동 양육은 높은 비용(치료/재활/교육 등)이 발생하며, 주 양육자인 여성의 취업 기회를 제한하여 빈곤을 가중시킵니다. 국가가 특별 근로세를 부과한다는 것은 전혀 사실이 아닙니다."
+  },
+  {
+    "level": "중",
+    "q": "사회보장제도의 원칙상, 장애가 발생한 원인 중 상대적으로 가장 유리한 수준의 공적 급여를 보장받는 경우는 무엇인가요? [교재 14장 / 워크북]",
+    "o": [
+      "노동 연령 이전에 선천적으로 발생한 장애",
+      "산업재해나 전쟁 중 상이 등 국가 및 노동 수행 과정에서 발생한 장애",
+      "가사노동을 전담하던 주부에게 발생한 질병 장애",
+      "은퇴 후 노년기에 자연 발생한 청력 장애"
+    ],
+    "a": 1,
+    "h": "국가나 기업을 위해 일하다가 다친 경우 보상이 큽니다.",
+    "e": "산재보험이나 국가유공자(상이군인) 연금 등 노동 수행이나 국가를 위한 전쟁 중 발생한 장애에 대해서는 비교적 유리한 수준의 급여가 제공되며, 그 외 일반 장애는 상대적으로 불리한 지원을 받습니다."
+  },
+  {
+    "level": "중",
+    "q": "영국의 근로증진수당(Working Tax Credit)이 장애인의 고용을 장려하기 위해 도입되었으나, 역설적으로 빈곤을 고착화할 수 있다는 비판을 받는 이유는 무엇인가요? [교재 14장 / 기출분석]",
+    "o": [
+      "보조금을 받은 장애인들이 전원 사직하고 해외로 이민을 가기 때문이다.",
+      "장애인이 전액 국고로 임금을 받아 기업들이 채용을 100% 거부하기 때문이다.",
+      "국가가 차액을 보전해주므로 고용주가 임금을 적극적으로 올리지 않고, 장애인도 수당을 받기 위해 저임금 일자리에 머물 가능성이 크기 때문이다.",
+      "장애인 근로자에게만 너무 높은 세율을 적용하기 때문이다."
+    ],
+    "a": 2,
+    "h": "보조금 제도가 오히려 최저임금 상승을 막는 핑계가 됩니다.",
+    "e": "근로수당 제도는 고용주의 임금 인상 의지를 꺾고 장애인 스스로도 수당 수급 자격을 유지하기 위해 저임금을 감수하게 만들어, 값싼 노동으로 묶어두는 빈곤의 구조화 원인이 되기도 합니다."
+  },
+  {
+    "level": "중",
+    "q": "우리나라의 소득 보전 급여 중, 18세 이상 중증장애인으로서 소득인정액이 하위 70% 이하 등 일정 기준을 충족할 때 지급되는 대표적인 기초급여의 명칭은 무엇인가요? [교재 14장 / 워크북]",
+    "o": [
+      "국민연금 장애연금",
+      "장애인연금 기초급여",
+      "장애수당",
+      "상병수당"
+    ],
+    "a": 1,
+    "h": "중증장애인에게 지급되는 기초 보장 연금입니다.",
+    "e": "「장애인연금법」상 중증장애인 중 소득인정액이 일정 기준 이하인 자에게는 '장애인연금 기초급여'가 지급됩니다. 중증이 아닌 경우는 '장애수당'이 지급됩니다."
+  },
+  {
+    "level": "중",
+    "q": "우리나라 장애인 복지 급여에서, '장애수당'의 지급 대상으로 올바른 조건은 무엇인가요? [교재 14장 / 워크북]",
+    "o": [
+      "모든 연령의 중증장애인 전체",
+      "만 18세 이상의 중증장애인에 해당하지 않는 자(경증)로서 기초수급자 및 차상위계층",
+      "고소득 전문직에 종사하는 만 18세 미만 장애아동",
+      "산업재해로 1급 판정을 받은 대기업 근로자"
+    ],
+    "a": 1,
+    "h": "경증(중증이 아닌) 장애인이면서 저소득층인 성인에게 줍니다.",
+    "e": "장애수당은 만 18세 이상 등록장애인 중 중증장애인에 해당하지 않는 자(경증장애인)로서 국민기초생활보장 수급자 및 차상위계층에게 지급됩니다."
+  },
+  {
+    "level": "중",
+    "q": "사회적 장애 모델의 실천 형태로 강조되는 방향성이 아닌 것은 무엇인가요? [교재 14장 / 강의록]",
+    "o": [
+      "당사자주의 (Nothing about us without us)",
+      "전문가주의적 통제와 의료적 치료 중심",
+      "정체성의 정치 및 차이의 정치 수용",
+      "인권 보장과 권익 옹호"
+    ],
+    "a": 1,
+    "h": "치료 중심 접근은 사회적 모델과 반대됩니다.",
+    "e": "전문가주의, 의사 중심의 진단과 치료에 의존하는 것은 '개인적(의료적) 장애 모델'의 특징입니다. 사회적 장애 모델은 장애인 당사자의 목소리와 권리, 차이의 수용을 강조합니다."
+  },
+  {
+    "level": "중",
+    "q": "개인적 장애 모델과 사회적 장애 모델이 '사회 구조'를 대하는 태도의 차이로 알맞은 것은 무엇인가요? [교재 14장 / 워크북]",
+    "o": [
+      "개인적 모델은 사회 구조를 변화할 수 있다고 보며, 사회적 모델은 고정불변으로 본다.",
+      "개인적 모델은 개인이 사회에 적응해야 한다고 보고, 사회적 모델은 적응할 수 없게 만드는 사회 구조 자체를 변화시켜야 한다고 본다.",
+      "두 모델 모두 자본주의의 소멸만이 유일한 해결책이라고 주장한다.",
+      "두 모델 모두 장애인은 무조건 시설에 수용해야 한다고 본다."
+    ],
+    "a": 1,
+    "h": "누가 바뀌어야 하는가(개인인가, 사회인가)의 차이입니다.",
+    "e": "개인적 모델은 사회를 주어진 것으로 간주하여 개인이 고치고 적응해야 한다고 봅니다. 반면 사회적 모델은 사회의 장벽이 장애를 만들므로, 시민의 연대를 통해 제도와 환경(구조)을 고쳐야 한다고 주장합니다."
+  },
+  {
+    "level": "중",
+    "q": "동대문장애인자립생활센터 문애린 활동가의 현장의 소리 인터뷰에 따르면, 서울시가 2023년에 400명의 중증장애인을 해고한 사건이 상징하는 우리 사회의 근본적인 문제는 무엇인가요? [교재 14장 현장의 소리]",
+    "o": [
+      "장애인들이 지나치게 많은 임금을 요구해서 기업이 파산한 현상",
+      "여전히 장애인을 주체적인 시민이나 노동자로 보지 않고 시설에 격리해야 할 '쓸모없는 존재'로 취급하는 사회적 배제 인식",
+      "중증장애인들이 모두 자발적으로 노동을 포기하고 휴식을 원했기 때문",
+      "모든 장애인이 의무적으로 공무원이 되어야 한다는 법안 통과 때문"
+    ],
+    "a": 1,
+    "h": "권리형 공공일자리를 없앤 것은 장애인을 노동의 주체로 인정하지 않기 때문입니다.",
+    "e": "문애린 활동가는 400명의 권리중심 공공일자리 해고 사태가 여전히 장애인을 동등한 국민이나 시민이 아니라 시설이나 집구석에 수용해야 할 대상으로 취급하는 행정의 배제적 인식을 보여준다고 강하게 비판했습니다."
+  },
+  {
+    "level": "중",
+    "q": "문애린 활동가 인터뷰에서, 장애인 빈곤을 더욱 고착화시키는 3대 구조적 원인(카르텔 등)으로 지적되지 않은 것은 무엇인가요? [교재 14장 현장의 소리]",
+    "o": [
+      "장애를 이유로 사회에서 배제하고 분리하는 인식",
+      "활동지원서비스 등 필수적인 정책에 대한 국가의 불충분한 예산 배정",
+      "시설 보호를 옹호하며 카르텔을 형성하고 있는 일부 종교계와 시설장",
+      "장애인 개인의 나태함과 구직 활동에 대한 열정 부족"
+    ],
+    "a": 3,
+    "h": "개인의 탓으로 돌리는 것은 활동가의 시각과 정반대입니다.",
+    "e": "문애린 활동가는 장애인 빈곤의 원인을 개인의 나태함이 아니라 철저한 사회적 배제, 기재부의 예산 통제, 그리고 탈시설을 가로막는 시설-종교계 카르텔 등 구조적 문제로 분석했습니다."
+  },
+  {
+    "level": "중",
+    "q": "스웨덴의 척추 장애 청년 '콘나드'의 사례가 한국 사회에 던지는 자립의 핵심적 시사점은 무엇인가요? [교재 14장 / 워크북]",
+    "o": [
+      "장애인은 가족과 무조건 영원히 동거해야 안전하다.",
+      "국가가 충분한 복지 자원(지원)을 제공하여 의존할 수 있게 해주면, 중증 장애인도 부모에게서 벗어나 자립적 삶과 꿈을 추구할 수 있다.",
+      "개인의 강인한 정신력만이 유일한 재활의 열쇠이다.",
+      "후천적 장애인은 복지 혜택에서 영구히 제외되어야 한다."
+    ],
+    "a": 1,
+    "h": "의존할 국가 자원이 많을수록 개인은 부모에게 종속되지 않고 자립합니다.",
+    "e": "콘나드 사례는 충분한 국가적 지원 인프라(의존할 자원)가 마련될 때, 장애인도 가족의 짐이 되지 않고 자신의 삶의 방향을 주체적으로 이끄는 진정한 '자립'이 가능함을 보여줍니다."}
+        // 
+    ];
+
+    let curIdx = 0;
+    let wrongCount = 0; // 틀린 횟수 추적 변수
+
+    function loadQuestion() {
+        wrongCount = 0;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    function checkAnswer(idx, btn) {
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+        
+        if (idx === q.a) {
+            // 정답을 맞춘 경우
+            btn.classList.add('correct');
+            allBtns.forEach(b => b.style.pointerEvents = 'none'); // 클릭 방지
+            showExplanation();
+        } else {
+            // 틀린 경우
+            wrongCount++;
+            btn.classList.add('wrong');
+            btn.style.pointerEvents = 'none'; // 틀린 버튼 다시 못 누르게
+            
+            if (wrongCount === 1) {
+                // 첫 번째 틀림: 힌트만 보여줌
+                document.getElementById('hint-text').innerText = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                // 두 번째 틀림: 정답 공개
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                showExplanation();
+            }
+        }
+    }
+
+    function showExplanation() {
+        const q = quizData[curIdx];
+        document.getElementById('exp-text').innerText = q.e;
+        document.getElementById('exp-box').style.display = 'block';
+        document.getElementById('next-btn').style.display = 'block';
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            document.getElementById('quiz-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'block';
+            document.getElementById('result-msg').innerText = "14강 학습을 완료하셨습니다. 수고하셨습니다, 학우님!";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>

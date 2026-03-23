@@ -20,6 +20,8 @@
     .hint-box { background: #fffaf0; border: 1px solid #fbd38d; color: #856404; }
     .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
     .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .result-btn { width:100%; padding:15px; margin:10px 0; border:1px solid #e2e8f0; border-radius:10px; background:white; cursor:pointer; font-size:1rem; font-weight:bold; transition:0.2s; }
+    .result-btn:hover { background:#f0f4ff; }
 </style>
 </head>
 <body>
@@ -41,8 +43,8 @@
     <div id="result-screen" class="result-card">
         <h2>🎊 학습을 마쳤습니다!</h2>
         <p id="result-msg"></p>
-        <button class="option-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
-        <button class="option-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+        <button class="result-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="result-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
     </div>
 </div>
 

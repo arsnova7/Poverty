@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>빈곤론 퀴즈 [14강 - 초급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); opacity: 0.6; }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; color: #856404; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .result-btn { width:100%; padding:15px; margin:10px 0; border:1px solid #e2e8f0; border-radius:10px; background:white; cursor:pointer; font-size:1rem; font-weight:bold; transition:0.2s; }
+    .result-btn:hover { background:#f0f4ff; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제14강: 장애와 빈곤 (초급)</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>정답 및 해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <p id="result-msg"></p>
+        <button class="result-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="result-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    /* [노트북LM 데이터]
+       형식: {"level": "하", "q": "질문", "o": ["보기1","보기2","보기3","보기4"], "a": 정답번호, "h": "힌트", "e": "해설"}
+    */
+    const quizData = [
+        {"level": "하", "q": "장애인에 대응하는 가장 올바르고 차별 없는 호칭은 무엇인가요? [교재 14장 / 강의녹음]",
+    "o": [
+      "정상인",
+      "일반인",
+      "비장애인",
+      "건강인"
+    ],
+    "a": 2,
+    "h": "장애인을 '비정상인'으로 인식하게 만드는 단어를 피해야 합니다.",
+    "e": "과거에는 장애인의 반대 개념을 '정상인'으로 썼으나, 이는 장애인을 비정상으로 규정하여 기피와 차별을 낳습니다. 가장 적절한 표현은 '비장애인'입니다."
+  },
+  {
+    "level": "하",
+    "q": "조선 전기에 시각장애인들이 결성하여 국가나 마을 행사에서 경전을 낭송했던 독경사 집단의 이름은 무엇인가요? [교재 14장 / 워크북]",
+    "o": [
+      "노들야학",
+      "명통시",
+      "인보관",
+      "자선조직협회"
+    ],
+    "a": 1,
+    "h": "조선시대 시각장애인들의 직업 단체입니다.",
+    "e": "조선 전기의 시각장애인들은 독경사 집단인 '명통시'를 결성하여 경전을 낭송하는 역할을 수행하며 직업 활동을 영위했습니다."
+  },
+  {
+    "level": "하",
+    "q": "산업자본주의 이후 장애인이 노동시장에서 배제되고 빈곤해진 근본적인 구조적 변화는 무엇인가요? [잠시만요 요약본 / 강의녹음]",
+    "o": [
+      "노동이 인간의 몸에서 기계의 속도에 맞춰지도록 재편되었다.",
+      "모든 기계가 장애인 전용으로 설계되어 비장애인이 배제되었다.",
+      "장애인들이 스스로 자본가가 되어 노동을 거부했다.",
+      "농업 중심 사회로 회귀하여 육체노동의 가치가 폭락했다."
+    ],
+    "a": 0,
+    "h": "과거에는 자신의 속도에 맞춰 일했지만, 이제는 공장의 기계 속도를 따라가야 합니다.",
+    "e": "전근대 사회에서는 인간의 몸과 속도에 노동을 맞췄으나, 산업자본주의 이후 기계와 엔진의 발전으로 노동자가 기계의 속도에 종속되면서 이를 따라가지 못하는 장애인은 노동시장에서 배제되었습니다."
+  },
+  {
+    "level": "하",
+    "q": "인간이 기계의 부품으로 전락하며 기계의 속도에 종속되는 모습을 적절히 보여준 찰리 채플린의 영화 제목은 무엇인가요? [교재 14장 / 강의녹음]",
+    "o": [
+      "위대한 독재자",
+      "모던 타임스",
+      "황금광 시대",
+      "시티 라이트"
+    ],
+    "a": 1,
+    "h": "근대 산업사회의 공장 노동을 풍자한 명작입니다.",
+    "e": "영화 「모던 타임스(1936)」는 기계의 속도가 빨라질수록 노동자가 끊임없이 그 속도를 따라잡아야 하는, 기계 중심으로 재편된 노동의 모습을 보여줍니다."
+  },
+  {
+    "level": "하",
+    "q": "2023년 기준, 비장애인의 경제활동 참가율(약 65%)과 비교할 때 장애인의 경제활동 참가율은 대략 어느 정도 수준인가요? [교재 14장 / 워크북]",
+    "o": [
+      "약 10%",
+      "약 35%",
+      "약 65%",
+      "약 85%"
+    ],
+    "a": 1,
+    "h": "비장애인의 절반 정도에 머물러 있습니다.",
+    "e": "장애인의 경제활동 참가율은 약 35%로 비장애인(약 65%)에 비해 절반 수준에 불과하여 노동시장 참여가 현저히 제한되어 있습니다."
+  },
+  {
+    "level": "하",
+    "q": "장애인의 빈곤 실태를 보여주는 지표로, 장애인의 국민기초생활보장 제도 수급 비율(약 20.8%)은 전체 인구 대비 대략 몇 배 높은 수준인가요? [교재 14장 / 강의녹음]",
+    "o": [
+      "동일한 수준이다",
+      "약 2배",
+      "약 4.3배",
+      "약 10배"
+    ],
+    "a": 2,
+    "h": "전체 인구보다 압도적으로 높은 비율로 기초수급에 의존하고 있습니다.",
+    "e": "장애인의 기초수급 비율은 20.8%로, 전체 인구 수급 비율 대비 약 4.3배나 높아 장애인 빈곤이 구조적으로 매우 심각함을 보여줍니다."
+  },
+  {
+    "level": "하",
+    "q": "2019년 기준 한국의 GDP 대비 장애인 복지 공적 지출 현황은 OECD 평균(1.98%)과 비교할 때 어떠한 수준인가요? [교재 14장 / 워크북]",
+    "o": [
+      "0.71%로 현저히 낮은 수준이다.",
+      "1.98%로 OECD 평균과 일치한다.",
+      "3.37%로 스웨덴과 비슷하다.",
+      "4.49%로 세계 최고 수준이다."
+    ],
+    "a": 0,
+    "h": "한국은 복지 예산 투입이 매우 부족한 국가에 속합니다.",
+    "e": "한국의 GDP 대비 장애인 복지지출은 0.71%로, OECD 평균 1.98%에 크게 못 미치는 최하위권 수준입니다."
+  },
+  {
+    "level": "하",
+    "q": "장애인 빈곤의 주요 원인으로 가장 부적절하게 설명된 것은 무엇인가요? [교재 14장 / 잠시만요 요약본]",
+    "o": [
+      "장애인과 돌보는 가족 모두 일자리를 가질 가능성이 적다.",
+      "의료비나 보조기구 구입 등 기본 욕구 충족을 위해 비장애인보다 더 많은 추가 비용이 필요하다.",
+      "장애인에 대한 공적 소득 보장 규모가 매우 충분하여 근로 의욕을 잃었기 때문이다.",
+      "사회 전반에 존재하는 차별과 편견으로 노동 및 소득 기회가 제한된다."
+    ],
+    "a": 2,
+    "h": "장애인은 국가의 소득 보장이 턱없이 부족하여 가난에 시달립니다.",
+    "e": "장애인 빈곤의 주요 원인은 공적 이전 소득(소득 보장)이 없거나 매우 부족하기 때문입니다. 소득 보장이 충분하여 근로 의욕을 잃었다는 것은 잘못된 설명입니다."
+  },
+  {
+    "level": "하",
+    "q": "2024년 기말고사 후기 응용입니다. 장애의 원인을 신체적, 정신적 손상 그 자체로 규정하며 치료와 재활을 통해 개인의 한계를 극복해야 한다고 보는 관점은 무엇인가요? [기말고사 후기 2024 / 교재 14장]",
+    "o": [
+      "사회적 장애 모델",
+      "개인적(의료적) 장애 모델",
+      "환경적 장애 모델",
+      "다문화 장애 모델"
+    ],
+    "a": 1,
+    "h": "개인의 몸을 고쳐서 사회에 적응해야 한다고 봅니다.",
+    "e": "개인적(의료적) 장애 모델은 문제의 원인을 개인의 신체·정신적 손상으로 보고, 의료적 치료와 재활을 통해 개인이 사회에 적응해야 한다고 주장합니다."
+  },
+  {
+    "level": "하",
+    "q": "2024년 기말고사 후기 응용입니다. 사회적 장애 모델에 대한 설명으로 가장 올바른 것은 무엇인가요? [기말고사 후기 2024 / 교재 14장]",
+    "o": [
+      "장애의 근본 원인은 오직 개인의 유전적 결함이다.",
+      "의학적 치료만이 유일한 해결책이다.",
+      "손상을 장애로 규정하는 사회의 편견과 차별적 장벽이 문제의 핵심이다.",
+      "장애인은 스스로의 노력으로만 자립해야 한다."
+    ],
+    "a": 2,
+    "h": "사회가 만든 계단과 편견이 손상을 장애로 만든다고 봅니다.",
+    "e": "사회적 장애 모델은 손상(impairment)과 장애(disability)를 구분하며, 신체적 손상이 있더라도 사회적 차별과 장벽이 없다면 장애가 되지 않는다고 보아 사회 구조의 변화를 요구합니다."
+  },
+  {
+    "level": "하",
+    "q": "장애인의 노동시장 참여를 제한하는 '인적 자본의 취약성'의 의미로 올바른 것은 무엇인가요? [교재 14장 / 강의녹음]",
+    "o": [
+      "장애인들은 선천적으로 저축을 싫어한다.",
+      "비장애인에 비해 교육이나 직업 훈련의 기회가 상대적으로 부족하여 경쟁력이 떨어진다.",
+      "모든 장애인이 의무적으로 대학에 진학하여 고학력 인플레이션이 발생했다.",
+      "국가가 장애인에게만 과도한 주식 투자를 강요했다."
+    ],
+    "a": 1,
+    "h": "학력이나 기술 등 노동시장에서 쓰일 능력을 키울 기회가 부족했습니다.",
+    "e": "장애인의 인적 자본이 취약하다는 것은, 비장애인에 비해 학교 교육이나 직업 훈련 시스템에서 배제되어 노동시장에서 요구하는 숙련된 능력을 갖출 기회가 부족함을 의미합니다."
+  },
+  {
+    "level": "하",
+    "q": "장애인 고용 확대를 위해 영국에서 도입한 제도로, 장애인 고용주에게 임금 보조를 해주고 낮은 임금을 보전해 주는 제도는 무엇인가요? [교재 14장 / 워크북]",
+    "o": [
+      "기본소득제",
+      "근로증진수당",
+      "실업급여",
+      "가족수당"
+    ],
+    "a": 1,
+    "h": "일하는 장애인과 그 고용주에게 금전적 인센티브를 줍니다.",
+    "e": "영국의 근로증진수당(Working Tax Credit)은 장애인의 고용을 장려하기 위해 고용주에게 보조금을 주고, 장애인 노동자의 저임금 격차를 국가가 보전해 주는 제도입니다."
+  },
+  {
+    "level": "하",
+    "q": "시설 중심이 아닌 지역사회 기반의 장애인 자립 생활을 목표로, 성인 중증장애인들이 공부하고 활동하는 '노란 들판'이라는 뜻을 가진 야학의 이름은 무엇인가요? [교재 14장 / 강의녹음]",
+    "o": [
+      "푸른야학",
+      "노들야학",
+      "은빛야학",
+      "새롬야학"
+    ],
+    "a": 1,
+    "h": "전국장애인차별철폐연대의 중요한 기반이 되는 곳입니다.",
+    "e": "노들야학의 '노들'은 '노란 들판'을 의미하며, 시설에 갇히지 않고 지역사회에서 스스로 살아갈 수 있는 환경을 만들기 위해 중증장애인들이 모여 공부하고 연대하는 야학입니다."
+  },
+  {
+    "level": "하",
+    "q": "사회적 장애 모델의 관점에서, 자기결정권이 보장된 진정한 '자립(Independence)'의 반대 개념은 무엇인가요? [교재 14장 / 강의녹음]",
+    "o": [
+      "의존 (Dependence)",
+      "독립 (Self-reliance)",
+      "종속 (Subordination)",
+      "고립 (Isolation)"
+    ],
+    "a": 2,
+    "h": "의존할 자원이 전혀 없어 선택권이 박탈된 상태입니다.",
+    "e": "사회적 장애 모델에서는 자립과 의존을 상호 보완적으로 봅니다. 다양한 자원에 의존할 수 있을 때 자립이 가능하며, 의존할 대상이 없어 선택지가 제한된 억압적 상태를 '종속'으로 보아 자립의 반대말로 규정합니다."
+  },
+  {
+    "level": "하",
+    "q": "장애인 운동 진영(김도현 활동가 등)에서 제안하는 가치로, 자립과 의존이라는 이분법을 넘어 홀로서기나 낙인화된 의존이 아닌 인간의 자연스러운 '함께 서기'를 의미하는 용어는 무엇인가요? [강의록 14강 / 교재 14장]",
+    "o": [
+      "자선 (Charity)",
+      "격리 (Segregation)",
+      "연립 (然立)",
+      "시혜 (Favor)"
+    ],
+    "a": 2,
+    "h": "자연스럽게 함께 기대어 존재한다는 뜻입니다.",
+    "e": "인간은 본디 상호 의존적 존재이므로, 자본주의가 만들어낸 개별화된 자립이나 낙인화된 의존을 넘어서 서로 기대며 함께 서는 '연립' 생활로 나아가야 진정한 자립이 실현된다고 봅니다."}
+        // 
+    ];
+
+    let curIdx = 0;
+    let wrongCount = 0; // 틀린 횟수 추적 변수
+
+    function loadQuestion() {
+        wrongCount = 0;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    function checkAnswer(idx, btn) {
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+        
+        if (idx === q.a) {
+            // 정답을 맞춘 경우
+            btn.classList.add('correct');
+            allBtns.forEach(b => b.style.pointerEvents = 'none'); // 클릭 방지
+            showExplanation();
+        } else {
+            // 틀린 경우
+            wrongCount++;
+            btn.classList.add('wrong');
+            btn.style.pointerEvents = 'none'; // 틀린 버튼 다시 못 누르게
+            
+            if (wrongCount === 1) {
+                // 첫 번째 틀림: 힌트만 보여줌
+                document.getElementById('hint-text').innerText = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                // 두 번째 틀림: 정답 공개
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                showExplanation();
+            }
+        }
+    }
+
+    function showExplanation() {
+        const q = quizData[curIdx];
+        document.getElementById('exp-text').innerText = q.e;
+        document.getElementById('exp-box').style.display = 'block';
+        document.getElementById('next-btn').style.display = 'block';
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            document.getElementById('quiz-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'block';
+            document.getElementById('result-msg').innerText = "14강 학습을 완료하셨습니다. 수고하셨습니다, 학우님!";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>

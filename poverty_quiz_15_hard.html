@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>빈곤론 퀴즈 [15강 - 상급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); opacity: 0.6; }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; color: #856404; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .result-btn { width:100%; padding:15px; margin:10px 0; border:1px solid #e2e8f0; border-radius:10px; background:white; cursor:pointer; font-size:1rem; font-weight:bold; transition:0.2s; }
+    .result-btn:hover { background:#f0f4ff; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제15강: 빈곤론의 반성과 과제 (상급)</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>정답 및 해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <p id="result-msg"></p>
+        <button class="result-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="result-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    /* [노트북LM 데이터]
+       형식: {"level": "상", "q": "질문", "o": ["보기1","보기2","보기3","보기4"], "a": 정답번호, "h": "힌트", "e": "해설"}
+    */
+    const quizData = [
+        {"level": "상", "q": "2025년 기출문제 응용입니다. 아마르티아 센의 빈곤 개념과 가장 부합하는 설명은 무엇인가요? [기출문제 2025 15강 / 워크북 15장]",
+    "o": [
+      "소득이 최저생계비에 미달하는 절대적 결핍 상태만을 의미한다.",
+      "건강, 교육 등의 조건이 갖춰지지 않아 개인이 삶을 선택하고 실행할 수 있는 능력(역량)이 제한된 상태를 의미한다.",
+      "오로지 주관적 불만족에서 기인하는 심리적 상태이다.",
+      "빈곤은 자원의 결핍과 무관하며 전적으로 개인의 나태함 때문이다."
+    ],
+    "a": 1,
+    "h": "돈이 없는 것을 넘어, 원하는 것을 할 수 있는 자유(Capability)가 박탈된 것입니다.",
+    "e": "센은 빈곤을 단순한 소득 부족이 아니라 개인이 실현할 수 있는 '역량(Capability)의 박탈'과 다양한 자유가 제한된 상태로 보았습니다."
+  },
+  {
+    "level": "상",
+    "q": "2025년 기출문제 응용입니다. 다음 중 국가의 빈곤과 불평등 완화에 구조적으로 기여하는 요인으로 볼 수 없는 것은 무엇인가요? [기출문제 2025 15강 / 기출분석]",
+    "o": [
+      "포용적 복지 정책의 확대",
+      "누진세 등 국가의 재분배 정책 강화",
+      "저소득층을 위한 공공부조 제도의 확대",
+      "노동 유연화의 무제한적 확대와 노조 무력화"
+    ],
+    "a": 3,
+    "h": "해고를 쉽게 만들고 노동자의 교섭력을 빼앗는 정책입니다.",
+    "e": "기업의 노동 유연화(비정규직 확대 등)와 노동조합의 약화는 고용 불안과 임금 격차를 낳아 오히려 불평등과 빈곤을 심화시키는 주된 원인입니다."
+  },
+  {
+    "level": "상",
+    "q": "2025년 기출문제 응용입니다. 복지국가의 핵심 개념인 '탈상품화(Decommodification)'를 잘못 이해한 설명은 무엇인가요? [기출문제 2025 15강 / 워크북]",
+    "o": [
+      "노동시장에서 일자리를 잃어도 생계를 유지할 수 있도록 국가가 보장하는 정도를 뜻한다.",
+      "실업, 질병, 노령 등의 위험 상황에서도 인간다운 생활이 가능하게 하는 것이다.",
+      "시장에 대한 의존도가 낮은 복지체계를 구축하는 것과 관련이 깊다.",
+      "개인이 시장에서 더 많은 상품을 소비할 수 있도록 국가가 기업의 마케팅을 지원하는 것이다."
+    ],
+    "a": 3,
+    "h": "상품이 아니게(탈) 만든다는 의미이지, 상품 소비를 촉진하는 것이 아닙니다.",
+    "e": "탈상품화는 복지, 의료, 교육 등을 사고파는 상품이 아니라 시민의 당연한 권리로 만들어, 시장(돈)이 없어도 생존할 수 있게 하는 복지국가의 원리입니다."
+  },
+  {
+    "level": "상",
+    "q": "2025년 기출문제 응용입니다. 빈곤을 개인의 도덕성 문제가 아닌 '사회구조적 문제'로 바라보는 관점을 가장 잘 설명한 것은 무엇인가요? [기출문제 2025 15강 / 교재 15장]",
+    "o": [
+      "빈곤은 사회의 차별적 구조, 노동시장 배제, 불평등한 제도로 인해 필연적으로 발생한다.",
+      "아무리 환경이 나빠도 본인 의지만 굳건하면 빈곤은 100% 탈출할 수 있다.",
+      "가난한 사람들은 유전적으로 절제력과 지능이 떨어지기 때문이다.",
+      "빈곤은 단순히 개인의 게으름과 잘못된 소비 습관의 결과물이다."
+    ],
+    "a": 0,
+    "h": "개인의 의지가 아니라 뛸 수 없는 불평등한 경기장을 탓하는 관점입니다.",
+    "e": "사회구조적 관점은 빈곤을 개인의 능력이나 나태함이 아니라, 자본주의의 구조적 모순, 기회 박탈, 제도의 결함에서 기인하는 것으로 보며 국가의 적극적 개입(보이는 손)을 요구합니다."
+  },
+  {
+    "level": "상",
+    "q": "2025년 기출문제 응용입니다. 복지를 '권리'가 아닌 '시혜'로 바라보는 관점에 해당하는 설명은 무엇인가요? [기출문제 2025 15강 / 워크북]",
+    "o": [
+      "복지는 국가가 선심 쓰듯 불쌍한 일부 빈민에게만 조건부로 베푸는 자선이다.",
+      "복지는 모든 인간이 인간답게 살기 위해 헌법적으로 보장받아야 할 기본권이다.",
+      "사회복지는 공동체 구성원의 사회적 평등을 달성하기 위한 필수적 연대 제도이다.",
+      "시민은 당당하게 국가 시스템의 보호를 요구할 권리가 있다."
+    ],
+    "a": 0,
+    "h": "도와주니까 고맙게 생각하라는 태도입니다.",
+    "e": "시혜적 복지관은 복지를 정치적 선심이나 자선으로 간주하여, 수급자를 대상화하고 낙인을 부여합니다. 반면 권리로서의 복지는 국가의 책무이자 시민의 헌법적 권리(사회권)로 규정합니다."
+  },
+  {
+    "level": "상",
+    "q": "자본주의와 시장, 국가의 개입에 대한 이념적 스펙트럼 중, 마르크스주의적 관점(혁명적 변혁)과 달리 '점진적 개혁'을 통해 자본주의 체제 내에서 불평등을 완화하고 복지를 실현하고자 하는 길은 무엇인가요? [교재 15장 / 강의녹음]",
+    "o": [
+      "자유방임주의",
+      "사회민주주의 좌파",
+      "신자유주의",
+      "제3의 길(능력개발국가)"
+    ],
+    "a": 1,
+    "h": "자본주의의 혁명적 전복보다는 제도의 수정을 택한 이념입니다.",
+    "e": "사회주의가 자본주의를 전복하려 했다면, 사회민주주의(특히 좌파)는 의회 민주주의와 점진적 개혁을 통해 자본주의의 모순을 수정하고 복지국가를 건설하려 한 노선입니다."
+  },
+  {
+    "level": "상",
+    "q": "영화 「스윙 보트(Swing Vote)」가 빈곤론 15강에서 던지는 가장 핵심적인 정치적 메시지는 무엇인가요? [교재 15장 / 강의록]",
+    "o": [
+      "선거 조작의 위험성과 투표 폐지의 필요성",
+      "정치인들의 완벽한 도덕성과 희생정신",
+      "무관심으로 투표를 포기했던 나 자신이 민주주의와 복지 훼손의 진짜 적이었으며, 시민의 한 표(참여)가 사회 구조를 바꾸는 결정적 힘이라는 성찰",
+      "복지 제도는 오직 부유층의 기부를 통해서만 유지될 수 있다는 현실론"
+    ],
+    "a": 2,
+    "h": "정치적 무관심이 어떤 결과를 낳는지, 그리고 참여가 세상을 어떻게 바꾸는지 묻는 영화입니다.",
+    "e": "영화는 정치가 부패했다며 투표를 외면했던 주인공의 각성을 통해, 민주주의와 복지국가의 향방은 결국 주권자인 시민의 적극적 참여(호모 폴리티쿠스)에 달려있음을 보여줍니다."
+  },
+  {
+    "level": "상",
+    "q": "에스핑-앤더슨의 복지국가 모델 중 '경쟁과 연민의 집'으로 비유되는 자유주의 복지국가 모델이 불평등을 대하는 근본적인 태도는 무엇인가요? [교재 15장 / 강의록]",
+    "o": [
+      "불평등은 국가 존립을 위협하므로 모든 사유 재산을 몰수하여 평등을 이룬다.",
+      "불평등은 시장 경쟁을 촉진하는 동력이므로 제거의 대상이 아니라 용인되며, 탈락자에게만 연민의 차원에서 최소한의 선별적 복지를 제공한다.",
+      "불평등은 노동조합의 부패에서 비롯되므로 노조를 해체하면 자연히 사라진다.",
+      "불평등은 사회보험 제도를 통해 직업별로 완벽하게 보상되어야 한다."
+    ],
+    "a": 1,
+    "h": "경쟁은 좋은 것이고, 뒤처진 불쌍한 사람만 살짝 돕는다는 철학입니다.",
+    "e": "자유주의 복지 모델(미국 등)은 시장 논리를 우선시하여 불평등을 발전의 동력으로 봅니다. 따라서 복지는 보편적 권리가 아니라, 자산 조사를 통과한 가난한 이들에게만 시혜적으로 주어지는 잔여적 형태를 띱니다."
+  },
+  {
+    "level": "상",
+    "q": "부모의 소득 격차가 자녀 세대의 빈곤 고착화로 이어지는 '빈곤의 대물림' 현상을 가장 명확하게 예고하는 한국 사회의 불평등 지표는 무엇인가요? [교재 15장 / 워크북]",
+    "o": [
+      "국가 전체의 투표율 하락",
+      "가구 소득 수준에 따른 사교육비 지출의 극심한 격차",
+      "상위 1%의 자산소득 증가폭 둔화",
+      "노인 기초연금 수급액의 점진적 인상"
+    ],
+    "a": 1,
+    "h": "돈으로 산 교육 기회가 자녀의 학벌과 미래 소득을 결정짓습니다.",
+    "e": "사교육이 발달한 한국에서 소득 계층 간 사교육비 격차(약 53만 원)는 교육 기회의 불평등을 낳고, 이는 훗날 직업 지위와 소득 격차로 직결되어 빈곤이 세대를 넘어 세습되는 구조적 원인이 됩니다."
+  },
+  {
+    "level": "상",
+    "q": "역사적 제도주의 관점에서, 시민들이 단순히 시장 논리에 맡겨두었던 빈곤 문제를 국가의 책임으로 요구하며 '복지국가'를 탄생시키게 된 두 가지 거대한 역사적 결절점(사건)은 무엇인가요? [교재 15장 / 강의녹음]",
+    "o": [
+      "르네상스와 종교 개혁",
+      "산업혁명과 프랑스 대혁명",
+      "대공황(1929년)과 두 차례의 세계대전",
+      "인터넷의 발명과 IMF 외환위기"
+    ],
+    "a": 2,
+    "h": "전 세계 경제가 붕괴하고 끔찍한 전쟁을 겪으며 국가 시스템의 개조를 요구하게 되었습니다.",
+    "e": "대공황으로 인한 전대미문의 실업과 세계대전의 참상은 시장의 보이지 않는 손이 완전하지 않음을 입증했고, 이 역사적 사건을 겪은 시민들의 정치적 요구가 베버리지 보고서와 복지국가를 탄생시켰습니다."
+  },
+  {
+    "level": "상",
+    "q": "강의록의 핵심 화두인 '빈곤, 능력의 문제인가, 배제의 책임인가?'라는 질문에 대해, 본 강의(15강)가 최종적으로 도출한 구조적 결론으로 가장 알맞은 것은? [강의록 15강 종합]",
+    "o": [
+      "빈곤은 결국 개인의 경제적 역량 부족이므로 각자가 스펙을 쌓아 해결해야 한다.",
+      "빈곤은 자본주의 사회에서 필연적이므로 국가는 일절 개입하지 말아야 한다.",
+      "빈곤은 불평등한 제도와 사회적 배제가 만들어낸 구조적 문제이므로, 조직된 시민의 힘(권리의 정치)을 통한 정치·제도적 변혁으로 해결해야 한다.",
+      "빈곤은 오직 선진국의 경제적 원조를 통해서만 근절될 수 있다."
+    ],
+    "a": 2,
+    "h": "가난은 지갑이 얇은 문제가 아니라, 목소리를 내지 못한 힘없는 자들의 문제입니다.",
+    "e": "15강의 결론은 빈곤을 개인화(능력 부족, 호모 이코노미쿠스)할 것이 아니라 사회화·정치화하여, 시민들이 연대하여 불평등한 구조를 깨고 사회임금과 권리를 쟁취하는 호모 폴리티쿠스가 되어야 한다는 것입니다."
+  },
+  {
+    "level": "상",
+    "q": "강북지역자활센터의 사례관리 현장에서 나타난 '빈곤의 총체성'을 설명하는 내용으로, 경제적 어려움 외에 빈곤층이 공통적으로 겪고 있는 치명적인 결핍 상태는 무엇인가요? [교재 15장 현장의 소리]",
+    "o": [
+      "최신 스마트 기기 조작 능력의 부족",
+      "해외 여행 경험의 완전한 부재",
+      "신뢰하고 의존할 수 있는 인간관계의 단절과 사회적 자본의 붕괴(고립)",
+      "외국어 소통 능력의 심각한 결여"
+    ],
+    "a": 2,
+    "h": "돈이 떨어졌을 때 \"도와줘\"라고 말할 수 있는 사람조차 없는 상태입니다.",
+    "e": "김종현 실장은 자활 참여자의 70%가 1인 가구이며, 이들이 겪는 가장 큰 문제는 위기 시 손을 내밀고 조언을 구할 관계가 단절된 '고립' 상태라는 점을 지적하며 빈곤이 경제 문제 이상의 다차원적 배제임을 설명했습니다."
+  },
+  {
+    "level": "상",
+    "q": "자활센터의 슬로건인 '인권에서 시민으로 나아가는 자활 사업'이 함의하는 빈곤층에 대한 관점 변화를 바르게 짝지은 것은 무엇인가요? [교재 15장 현장의 소리]",
+    "o": [
+      "시혜적 행정의 수동적 '대상화' ➔ 사회권을 정당하게 행사하는 능동적 '권리 주체'",
+      "사회적 배제의 능동적 수용 ➔ 국가에 대한 절대적 복종",
+      "자본주의 시장의 단순 부품 ➔ 무소불위의 독재 권력자",
+      "복지 제도의 파괴자 ➔ 시장 자유주의의 옹호자"
+    ],
+    "a": 0,
+    "h": "불쌍해서 도와줘야 할 사람에서, 당당히 권리를 요구하는 국민으로의 전환입니다.",
+    "e": "이 슬로건은 빈곤층을 관리와 시혜의 대상(수동적 객체)으로 바라보던 기존의 복지 관행에서 벗어나, 이들이 보편적 인권(사회권)을 바탕으로 공동체의 당당한 시민(주체)으로 서도록 돕겠다는 실천 철학을 담고 있습니다."
+  },
+  {
+    "level": "상",
+    "q": "수당의 정치(Politics of Allowance)와 권리의 정치(Politics of Rights)를 구분할 때, 제도를 형성하는 의사결정 방식의 가장 큰 차이점은 무엇인가요? [교재 15장 / 강의록]",
+    "o": [
+      "수당의 정치는 국민투표로, 권리의 정치는 왕의 명령으로 결정된다.",
+      "수당의 정치는 정치인이 일방적, 하향식으로 정책을 설계하여 내려주는 반면, 권리의 정치는 조직된 시민이 논의 구조에 직접 참여하여 상향식으로 권력을 쟁취한다.",
+      "수당의 정치는 예산을 무제한 투입하지만, 권리의 정치는 예산을 전혀 쓰지 않는다.",
+      "수당의 정치는 기업이 주도하고, 권리의 정치는 외국 자본이 주도한다."
+    ],
+    "a": 1,
+    "h": "누가 밥상을 차리는가의 차이입니다. 하나는 차려주는 밥상, 하나는 같이 차리는 밥상입니다.",
+    "e": "수당의 정치는 정부/정치인이 주체가 되어 유권자에게 혜택(수당)을 베푸는 엘리트주의적 방식이지만, 권리의 정치는 노동조합, 시민단체 등 조직된 시민이 주체가 되어 분배 과정에 직접 참여하고 제도를 변화시키는 민주적 방식입니다."
+  },
+  {
+    "level": "상",
+    "q": "15강의 핵심 키워드 중, 빈곤의 해결 주체를 '보이지 않는 손(시장)'에서 '보이는 손(정부)'으로, 그리고 궁극적으로는 '연대하는 손(시민)'으로 확장해야 함을 상징적으로 보여주는 사상적 명제는 무엇인가요? [강의록 15강 종합]",
+    "o": [
+      "최대 다수의 최대 행복만이 유일한 선이다.",
+      "민주주의의 가장 큰 적은 정치에 무관심하고 권리를 요구하지 않는 원자화된 시민(호모 이코노미쿠스) 자신이다.",
+      "국가의 모든 부는 자유 시장의 완전한 방임을 통해서만 이루어진다.",
+      "복지병을 치유하기 위해서는 가혹한 굶주림이 필수적이다."
+    ],
+    "a": 1,
+    "h": "정치가 내 밥그릇을 지켜주지 않는다고 불평하기 전에, 내가 정치에 참여했는지 묻는 명제입니다.",
+    "e": "빈곤론의 대단원은 복지국가와 제도가 저절로 주어지는 것이 아니라 시민의 정치적 각성과 참여(호모 폴리티쿠스로의 전환)를 통해서만 쟁취되고 유지될 수 있다는 점을 강조하며 마무리됩니다."}
+        // 
+    ];
+
+    let curIdx = 0;
+    let wrongCount = 0; // 틀린 횟수 추적 변수
+
+    function loadQuestion() {
+        wrongCount = 0;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    function checkAnswer(idx, btn) {
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+        
+        if (idx === q.a) {
+            // 정답을 맞춘 경우
+            btn.classList.add('correct');
+            allBtns.forEach(b => b.style.pointerEvents = 'none'); // 클릭 방지
+            showExplanation();
+        } else {
+            // 틀린 경우
+            wrongCount++;
+            btn.classList.add('wrong');
+            btn.style.pointerEvents = 'none'; // 틀린 버튼 다시 못 누르게
+            
+            if (wrongCount === 1) {
+                // 첫 번째 틀림: 힌트만 보여줌
+                document.getElementById('hint-text').innerText = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                // 두 번째 틀림: 정답 공개
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                showExplanation();
+            }
+        }
+    }
+
+    function showExplanation() {
+        const q = quizData[curIdx];
+        document.getElementById('exp-text').innerText = q.e;
+        document.getElementById('exp-box').style.display = 'block';
+        document.getElementById('next-btn').style.display = 'block';
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            document.getElementById('quiz-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'block';
+            document.getElementById('result-msg').innerText = "모든 학습을 완료하셨습니다. 진짜 수고 많이 하셨습니다, 학우님! A+ 당근";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>

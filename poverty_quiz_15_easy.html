@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>빈곤론 퀴즈 [15강 - 초급]</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root { --primary: #5c6ac4; --bg-gray: #f4f6f8; --success: #28a745; --danger: #dc3545; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { width: 100%; text-align: left; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .option-btn:hover { background: #f0f4ff; border-color: var(--primary); }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); opacity: 0.6; }
+    .btn-next { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+    .hint-box, .exp-box { padding: 15px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; }
+    .hint-box { background: #fffaf0; border: 1px solid #fbd38d; color: #856404; }
+    .exp-box { background: #e6fffa; border: 1px solid #b2f5ea; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .result-btn { width:100%; padding:15px; margin:10px 0; border:1px solid #e2e8f0; border-radius:10px; background:white; cursor:pointer; font-size:1rem; font-weight:bold; transition:0.2s; }
+    .result-btn:hover { background:#f0f4ff; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title">제15강: 빈곤론의 반성과 과제 (초급)</h1>
+            <p id="progress-text">1 / 15</p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-text" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; word-break: keep-all;"></div>
+            <div id="options-container"></div>
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>정답 및 해설:</b> <span id="exp-text"></span></div>
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2>🎊 학습을 마쳤습니다!</h2>
+        <p id="result-msg"></p>
+        <button class="result-btn" style="background:var(--primary); color:white; text-align:center;" onclick="location.reload()">🔄 처음부터 다시 풀기</button>
+        <button class="result-btn" style="text-align:center;" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    /* [노트북LM 데이터]
+       형식: {"level": "하", "q": "질문", "o": ["보기1","보기2","보기3","보기4"], "a": 정답번호, "h": "힌트", "e": "해설"}
+    */
+    const quizData = [
+        {"level": "하", "q": "아마르티아 센(Amartya Sen)은 빈곤을 단순한 자원의 결핍이 아니라 어떤 상태로 규정하였는가? [교재 15장 / 잠시만요]",
+    "o": [
+      "유전적으로 지능이 낮은 상태",
+      "개인이 역량(capabilities)을 발휘할 자유가 박탈된 조건",
+      "일시적인 실업 상태",
+      "시장에서 상품을 구매할 수 있는 능력이 과도한 상태"
+    ],
+    "a": 1,
+    "h": "빈곤을 단순히 경제적 문제에 국한하지 않고 인간의 잠재력과 자유로운 선택 능력이 제약되는 사회적 조건으로 보았습니다.",
+    "e": "아마르티아 센은 빈곤을 개인이 역량을 발휘할 자유가 박탈된 조건으로 규정하며, 단순한 소득 부족을 넘어선 구조적 문제로 이해해야 한다고 강조했습니다."
+  },
+  {
+    "level": "하",
+    "q": "노동력과 복지 서비스를 시장의 논리로부터 분리하여 국가가 권리로 보장하는 정도를 의미하는 용어는 무엇인가요? [교재 15장 / 잠시만요]",
+    "o": [
+      "상품화(Commodification)",
+      "탈상품화(Decommodification)",
+      "계층화(Stratification)",
+      "개인화(Individualization)"
+    ],
+    "a": 1,
+    "h": "교육, 의료 등을 시장에서 매매되는 상품이 아니라 시민의 권리로 보장하는 것을 뜻합니다.",
+    "e": "탈상품화(Decommodification)는 시장에 의존하지 않고도 생계를 유지할 수 있도록 국가가 보호하는 정도를 의미합니다."
+  },
+  {
+    "level": "하",
+    "q": "복지제도가 사회 내 소득과 직업 지위 간의 격차나 불평등 구조를 강화하거나 완화하는 수준을 나타내는 개념은 무엇인가요? [교재 15장 / 잠시만요]",
+    "o": [
+      "탈상품화",
+      "재상품화",
+      "계층화(Stratification)",
+      "보편화"
+    ],
+    "a": 2,
+    "h": "사회 내 불평등 구조의 수준을 보여주는 지표입니다.",
+    "e": "계층화(Stratification)는 소득과 직업 지위 간의 격차 수준을 의미하며, 복지국가가 사회 내 불평등 구조를 어느 정도로 고착화 또는 완화하는지를 보여줍니다."
+  },
+  {
+    "level": "하",
+    "q": "에스핑-앤더슨의 복지국가 유형 중 탈상품화 효과는 낮고 계층화 수준은 높아 불평등이 심각하게 나타나는 유형은 무엇인가요? [교재 15장 / 워크북]",
+    "o": [
+      "자유주의 복지국가",
+      "조합주의 복지국가",
+      "사회민주주의 복지국가",
+      "공산주의 복지국가"
+    ],
+    "a": 0,
+    "h": "미국, 영국 등이 대표적이며 시장의 자율성을 강조합니다.",
+    "e": "자유주의 복지국가는 시장의 자율성을 강조하고 개인의 책임을 중시하여 탈상품화 효과가 낮고 계층화 수준이 높은 특징을 지닙니다."
+  },
+  {
+    "level": "하",
+    "q": "에스핑-앤더슨의 복지국가 유형 중 탈상품화 효과가 가장 높고 계층화 수준이 가장 낮아 사회적 평등이 제도적으로 보장되는 유형은 무엇인가요? [교재 15장 / 워크북]",
+    "o": [
+      "자유주의 복지국가",
+      "조합주의 복지국가",
+      "사회민주주의 복지국가",
+      "봉건주의 국가"
+    ],
+    "a": 2,
+    "h": "스웨덴, 덴마크 등이 대표적이며 '국민의 집' 모델하우스로 비유됩니다.",
+    "e": "사회민주주의 복지국가는 교육, 의료 등을 권리로 간주하여 탈상품화 효과가 높고 직업 간 소득 격차가 적어 계층화 수준이 낮습니다."
+  },
+  {
+    "level": "하",
+    "q": "에스핑-앤더슨의 복지국가 유형 중 독일이 대표적이며, 사회보험을 중심으로 직업군에 따라 사회보장이 차등 제공되는 유형은 무엇인가요? [교재 15장 / 워크북]",
+    "o": [
+      "자유주의 복지국가",
+      "조합주의(보수주의) 복지국가",
+      "사회민주주의 복지국가",
+      "시장방임주의 국가"
+    ],
+    "a": 1,
+    "h": "'온정적 아버지의 집'으로 비유되며, 사회보험 체계를 중심으로 합니다.",
+    "e": "조합주의(보수주의) 복지국가는 사회보험 중심의 체계를 갖추고 직업군과 소득 수준에 따라 사회보장이 차등적으로 제공됩니다."
+  },
+  {
+    "level": "하",
+    "q": "오늘날 엘리트 계층이나 특정 집단이 부를 축적하게 된 경제적 불평등의 원인으로, 지능이나 노력의 차이가 아니라 사회 제도의 문제를 지적할 때 핵심적으로 언급되는 것은 무엇인가요? [교재 15장 / 강의록]",
+    "o": [
+      "단순한 기술 진보만의 결과",
+      "노동조합의 약화와 조세 정책 등 구조적·제도적 요인",
+      "개인의 선천적인 지능 차이",
+      "개발도상국의 경제 원조 요구"
+    ],
+    "a": 1,
+    "h": "기술 수준이 유사한 영어권 국가들 사이에서도 불평등 수준이 다르다는 점은 이것이 원인임을 시사합니다.",
+    "e": "빈곤과 불평등 증대는 단순한 기술 진보가 아니라 노동조합 단체 교섭력, 정부 조세 정책, 기업의 노동 유연화 등 구조적·제도적 요인에 의해 결정됩니다."
+  },
+  {
+    "level": "하",
+    "q": "영화 「스윙 보트(Swing Vote)」에서 유권자에게 다가가 다음 선거의 득표만을 위해 공약을 남발하는 인물 군상을 가리키는 용어는 무엇인가요? [교재 15장 / 강의녹음]",
+    "o": [
+      "정치가(statesman)",
+      "정치꾼(politician)",
+      "호모 폴리티쿠스(homo politicus)",
+      "혁명가(revolutionary)"
+    ],
+    "a": 1,
+    "h": "다음 세대가 아닌 다음 선거만을 생각하는 사람입니다.",
+    "e": "클락(Colin Grant Clark)은 정치꾼은 다음 선거를 생각하지만 정치가는 다음 세대를 생각한다고 하였습니다. 영화 속 정치인들은 당장의 표를 얻기 위해 공약을 남발하는 정치꾼의 모습을 보여줍니다."
+  },
+  {
+    "level": "하",
+    "q": "빈곤의 문제를 개인화할 경우 지향하게 되는, 노동시장의 상품으로서 경쟁력을 갖추고 시장임금으로 빈곤을 해결해야 하는 중심 인간형은 무엇인가요? [교재 15장 / 잠시만요]",
+    "o": [
+      "호모 사피엔스",
+      "호모 폴리티쿠스",
+      "호모 루덴스",
+      "호모 이코노미쿠스(경제적 인간)"
+    ],
+    "a": 3,
+    "h": "합리적인 경제적 이익을 추구하는 인간상을 뜻합니다.",
+    "e": "빈곤을 개인화할 경우, 개인은 시장에서 노동 상품으로 살아남아야 하므로 '호모 이코노미쿠스'가 중심 인간형이 됩니다."
+  },
+  {
+    "level": "하",
+    "q": "빈곤의 문제를 사회화할 경우 지향하게 되는, 제도의 수혜자에 머물지 않고 정치적 주체로서 참여와 연대를 통해 권리를 요구하는 인간형은 무엇인가요? [교재 15장 / 잠시만요]",
+    "o": [
+      "호모 파베르",
+      "호모 폴리티쿠스(정치적 인간)",
+      "호모 이코노미쿠스",
+      "호모 에렉투스"
+    ],
+    "a": 1,
+    "h": "정치에 적극적으로 참여하고 제도를 변화시키는 주체를 뜻합니다.",
+    "e": "빈곤을 사회화/정치화할 경우, 시민은 정치적 주체로서 탈상품화와 사회임금 확대를 요구하는 '호모 폴리티쿠스'가 됩니다."
+  },
+  {
+    "level": "하",
+    "q": "2024년 기말고사 후기 응용입니다. 빈곤의 원인을 개인의 나태함이 아니라 사회 구조의 문제로 보고 정부의 개입이 필수적이라고 보는 입장을 대변하는 속담/격언은 무엇인가요? [기말고사 후기 2024 / 교재 15장]",
+    "o": [
+      "가난 구제는 나라님도 못한다.",
+      "가난은 나라만이 구할 수 있다.",
+      "하늘은 스스로 돕는 자를 돕는다.",
+      "젊어서 고생은 사서도 한다."
+    ],
+    "a": 1,
+    "h": "빈곤을 구조적 문제로 인식하고 국가 책임을 강조하는 문장입니다.",
+    "e": "'가난 구제는 나라님도 못한다'는 빈곤을 개인의 책임으로 돌리는 관점이며, '가난은 나라만 구할 수 있다'는 빈곤을 사회 구조적 문제로 인식하고 국가의 적극적 개입을 요구하는 관점입니다."
+  },
+  {
+    "level": "하",
+    "q": "강북지역자활센터 김종현 실장 인터뷰에서 언급된 '게이트웨이(Gateway) 사업'의 주된 목적은 무엇인가요? [교재 15장 현장의 소리 / 강의녹음]",
+    "o": [
+      "주민들의 해외 취업 알선",
+      "자활 사업 참여 전 사업에 대한 이해를 높이고 자활 의욕을 고취하는 교육",
+      "기초생활수급자의 강제 노동 징발",
+      "센터 직원들의 승진 평가"
+    ],
+    "a": 1,
+    "h": "현장에 투입되기 전 준비하고 학습하는 관문(Gateway) 역할을 합니다.",
+    "e": "게이트웨이 사업은 주민들이 자활 사업에 본격적으로 참여하기 전에 자활 사업 전반에 대한 이해를 높이고 필요한 정보를 습득하며 자활 의욕을 고취할 수 있도록 마련된 교육 과정입니다."
+  },
+  {
+    "level": "하",
+    "q": "김종현 실장이 언급한 사례 중, 부채가 얼마인지조차 파악하지 못하고 청구서를 봉투에 모아두기만 했던 주민의 사례가 보여주는 빈곤의 단면은 무엇인가요? [교재 15장 현장의 소리 / 강의녹음]",
+    "o": [
+      "단순한 경제적 빈곤을 넘어선 정보에 대한 빈곤과 무기력",
+      "채무 상환 능력이 있음에도 고의로 회피하는 도덕적 해이",
+      "과도한 주식 투자로 인한 자발적 파산",
+      "복지 제도를 악용하려는 부정 수급 의도"
+    ],
+    "a": 0,
+    "h": "어려운 상황을 스스로 마주할 용기조차 잃어버린 상태를 의미합니다.",
+    "e": "청구서를 열어볼 용기조차 내지 못하고 방치했던 사례는 단순한 경제적 결핍을 넘어 정보에 대한 빈곤과 삶을 자포자기한 무기력 상태라는 총체적 빈곤의 성격을 보여줍니다."
+  },
+  {
+    "level": "하",
+    "q": "오늘날 빈곤의 더 심각한 주요 원인으로 현장의 소리에서 지목된 '수급자'라는 단어가 주는 낙인과 부정적 이미지는 무엇과 관련이 깊은가요? [교재 15장 현장의 소리 / 강의녹음]",
+    "o": [
+      "과도한 보편적 복지로 인한 세금 낭비",
+      "선별적 복지 체계에서 비롯된 사회적 배제와 고립",
+      "근로 의욕을 꺾는 높은 최저임금",
+      "결혼이민자의 급증"
+    ],
+    "a": 1,
+    "h": "특정 조건을 갖춘 사람만 골라서 지원할 때 생기는 꼬리표입니다.",
+    "e": "과거에는 빈곤을 단순히 경제나 노동의 문제로 보았다면, 오늘날에는 선별적 복지에서 오는 낙인감, 사회적 배제, 관계의 단절과 고립이 더 심각한 빈곤 요인으로 지적됩니다."
+  },
+  {
+    "level": "하",
+    "q": "정치인이 유권자에게 다가가 \"당신이 원한다면 내가 시혜적으로 정책을 주겠다\"라고 약속하는 정치 방식은 무엇인가요? [교재 15장 / 기출분석]",
+    "o": [
+      "권리의 정치",
+      "참여의 정치",
+      "수당의 정치",
+      "연대의 정치"
+    ],
+    "a": 2,
+    "h": "자선과 시혜의 철학을 기반으로 합니다.",
+    "e": "수당의 정치는 정부가 취약계층에게 더 많은 사회적 급여를 주는 것을 목표로 하며 자선과 시혜에 기반합니다. 반면 권리의 정치는 시민이 스스로 참여하여 권리를 요구하는 방식입니다."}
+        // 
+    ];
+
+    let curIdx = 0;
+    let wrongCount = 0; // 틀린 횟수 추적 변수
+
+    function loadQuestion() {
+        wrongCount = 0;
+        const q = quizData[curIdx];
+        document.getElementById('progress-text').innerText = `${curIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = `Q${curIdx + 1}. ${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    function checkAnswer(idx, btn) {
+        const q = quizData[curIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+        
+        if (idx === q.a) {
+            // 정답을 맞춘 경우
+            btn.classList.add('correct');
+            allBtns.forEach(b => b.style.pointerEvents = 'none'); // 클릭 방지
+            showExplanation();
+        } else {
+            // 틀린 경우
+            wrongCount++;
+            btn.classList.add('wrong');
+            btn.style.pointerEvents = 'none'; // 틀린 버튼 다시 못 누르게
+            
+            if (wrongCount === 1) {
+                // 첫 번째 틀림: 힌트만 보여줌
+                document.getElementById('hint-text').innerText = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                // 두 번째 틀림: 정답 공개
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                showExplanation();
+            }
+        }
+    }
+
+    function showExplanation() {
+        const q = quizData[curIdx];
+        document.getElementById('exp-text').innerText = q.e;
+        document.getElementById('exp-box').style.display = 'block';
+        document.getElementById('next-btn').style.display = 'block';
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            document.getElementById('quiz-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'block';
+            document.getElementById('result-msg').innerText = "15강 학습을 완료하셨습니다. 진짜 많이 수고하셨습니다, 학우님!";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>
